@@ -6,6 +6,7 @@ from queue import Queue
 
 class PCIe:
     PACK_START = 8  # 包的数据起始位置
+    PACK_TIME = 128/48000  # 一个包中音频数据的时长，单位为秒
     INTERVAL = 0.002  # 循环间隔设置为两毫秒
 
     def __init__(self):
@@ -40,11 +41,11 @@ class PCIe:
             if elapsed_time < PCIe.INTERVAL:
                 time.sleep(PCIe.INTERVAL - elapsed_time)  # 等待直到两毫秒总时间完成
 
-    def get_queue_size(self) -> int:
+    def get_queue_size(self) -> float:
         """
-        获取队列中的数据包数量
+        获取队列中的音频数据时长，单位为秒
         """
-        return self.audio_data_queue.qsize()
+        return self.audio_data_queue.qsize() * PCIe.PACK_TIME
 
     def get_queue_data(self) -> np.ndarray:
         """
