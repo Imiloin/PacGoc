@@ -107,7 +107,7 @@ class CLS:
 
         return res
 
-    def __call__(self, audio_data: np.int16) -> list:
+    def __call__(self, audio_data: np.ndarray) -> list:
         """
         Input preprocess, model inference and output postprocess.
         """
