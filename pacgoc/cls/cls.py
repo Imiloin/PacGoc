@@ -56,13 +56,13 @@ class CLS:
         self.cls.model.set_state_dict(model_dict)
         self.cls.model.eval()
 
-    def preprocess(self, audio_data: np.int16):
+    def preprocess(self, audio_data: np.ndarray):
         """
         Input preprocess and return paddle.Tensor stored in cls.input.
         Input content can be a text(tts), a file(asr, cls) or a streaming(not supported yet).
         """
         feat_conf = self.cls._conf["feature"]
-        waveform = audio_data
+        waveform = audio_data.view(dtype=np.int16)
         # 将音频数据转换为float32类型
         waveform = waveform.astype(np.float32)
 
@@ -90,7 +90,7 @@ class CLS:
         """
         self.cls.infer()
 
-    def postprocess(self) -> list:
+    def postprocess(self) -> list[tuple]:
         """
         Output postprocess and return human-readable results.
         Return a list of tuples, each tuple contains a label and a score.

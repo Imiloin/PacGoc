@@ -3,6 +3,7 @@ temp/
 *.code-workspace
 *:Zone.Identifier
 test*.py
+.vscode/
 
 
 # Byte-compiled / optimized / DLL files

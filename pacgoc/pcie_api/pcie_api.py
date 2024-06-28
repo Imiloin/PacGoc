@@ -57,6 +57,7 @@ class PCIe:
     def get_queue_data(self) -> np.ndarray:
         """
         将队列中的数据包合并成一个数组并返回
+        !!使用时，需要view(dtype=np.int16)视为int16格式
         """
         all_arrays = []
         while not self.audio_data_queue.empty():
