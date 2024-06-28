@@ -11,8 +11,12 @@ class AgeGender:
     def __init__(
         self,
         sampling_rate: int = 16000,
-        model_root: os.PathLike = "model",
-        cache_root: os.PathLike = "cache",
+        model_root: os.PathLike = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "model"
+        ),
+        cache_root: os.PathLike = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "cache"
+        ),
     ):
         """
         Initialize AgeGender model, if not exists, download and extract it.
@@ -52,6 +56,7 @@ class AgeGender:
         Infer age and gender
         """
         audio_data = audio_data.view(dtype=np.int16)
+        audio_data = audio_data.astype(np.float32)
         return self.interface.process_signal(audio_data, self.sampling_rate)
 
     def postprocess(self, infer_result) -> dict:

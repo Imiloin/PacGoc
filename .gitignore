@@ -5,6 +5,10 @@ temp/
 test*.py
 .vscode/
 
+# model and cache
+pacgoc/profiling/age_gender/cache/
+pacgoc/profiling/age_gender/model/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
