@@ -1,1 +1,1 @@
-from pcie_api.pcie_api import PCIe
+from .pcie_api import PCIe

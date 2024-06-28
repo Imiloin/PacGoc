@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+# add current directory to sys.path to import pcie module
+current_dir = Path(__file__).parent
+sys.path.append(str(current_dir))
+
 import pcie
 import time
 import numpy as np
@@ -6,7 +13,7 @@ from queue import Queue
 
 class PCIe:
     PACK_START = 8  # 包的数据起始位置
-    PACK_TIME = 128/48000  # 一个包中音频数据的时长，单位为秒
+    PACK_TIME = 128 / 48000  # 一个包中音频数据的时长，单位为秒
     INTERVAL = 0.002  # 循环间隔设置为两毫秒
 
     def __init__(self):
