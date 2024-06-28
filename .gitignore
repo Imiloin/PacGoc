@@ -4,6 +4,7 @@ temp/
 *:Zone.Identifier
 test*.py
 .vscode/
+sample/
 
 # model and cache
 pacgoc/profiling/age_gender/cache/
