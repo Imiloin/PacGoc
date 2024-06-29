@@ -1,6 +1,7 @@
 from funasr import AutoModel
 import os
 import numpy as np
+from ...utils import pcm16to32
 
 
 ################# to do: change the sampling rate to 16000
@@ -13,8 +14,8 @@ class Emotion:
         self.model = AutoModel(model=model)
 
     def preprocess(self, audio_data: np.ndarray):
-        audio = audio_data.view(dtype=np.int16) / 32768.0
-        audio = audio.astype(np.float32)
+        audio = audio_data.view(dtype=np.int16)
+        audio = pcm16to32(audio)
         # print(audio)
         # print(type(audio))
         return audio

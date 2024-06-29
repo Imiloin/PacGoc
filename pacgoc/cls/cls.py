@@ -64,7 +64,7 @@ class CLS:
         feat_conf = self.cls._conf["feature"]
         waveform = audio_data.view(dtype=np.int16)
         # 将音频数据转换为float32类型
-        waveform = waveform.astype(np.float32)
+        waveform = waveform.astype(np.float32) ####### 是否需要归一化？
 
         # Feature extraction
         feature_extractor = LogMelSpectrogram(
