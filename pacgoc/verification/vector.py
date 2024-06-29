@@ -50,7 +50,7 @@ class Vector:
                     enroll_embedding.tolist()
                 )  # convert numpy array to list
             if enroll_embeddings is not None:
-                if self._is_valid_json(enroll_embeddings):
+                if enroll_embeddings.endswith(".json"):
                     with open(enroll_embeddings, "w") as f:
                         json.dump(self.enroll_embeddings, f)
                 else:

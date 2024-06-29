@@ -1,1 +1,1 @@
-from .vertor import Vector
+from .vector import Vector
