@@ -1,5 +1,8 @@
 # Override jupyter in Github language stats for more accurate estimate of repo code languages
 # reference: https://github.com/github/linguist/blob/master/docs/overrides.md#generated-code
 *.ipynb linguist-generated
+# Exclude driver code from language stats
+*.c linguist-vendored
+*.h linguist-vendored
 # Auto detect text files and perform LF normalization
 * text=auto eol=lf
