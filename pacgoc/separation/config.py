@@ -1,0 +1,10 @@
+sample_rate = 16000
+hop_samples = 320
+segment_frames = 200
+energy_thres = 0.1
+loss_type = "mae"
+using_whiting = False
+latent_dim = 2048
+classes_num = 527
+overlap_rate = 0.0
+infer_type = "mean"
