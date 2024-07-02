@@ -6,7 +6,7 @@ test*.py
 .vscode/
 sample/
 
-# model and cache
+# model, cache and logs
 pacgoc/profiling/age_gender/cache/
 pacgoc/profiling/age_gender/model/
 **/lightning_logs/
