@@ -1,1 +1,2 @@
+soundcard==0.4.3
 paddlepaddle-gpu==2.6.1

@@ -19,7 +19,7 @@ setup(
     description="An audio analysis toolbox",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(exclude=["tests*"]),
+    packages=find_packages(exclude=["tests*", "app"]),
     python_requires=">=3.10",
     install_requires=requirements
     + [
