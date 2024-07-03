@@ -1,23 +1,37 @@
 from funasr import AutoModel
 import os
+import librosa
 import numpy as np
 from ...utils import pcm16to32
 
 
-################# to do: change the sampling rate to 16000
 ################# conflicting with paddle.utils.run_check() ????
 class Emotion:
-    def __init__(self, model: os.PathLike = "iic/emotion2vec_base_finetuned"):
+    MODEL_SAMPLE_RATE = 16000
+
+    def __init__(
+        self,
+        sr: int = 16000,
+        isint16: bool = True,
+        model: os.PathLike = "iic/emotion2vec_base_finetuned",
+    ):
         """
         Initialize the Emotion class.
         """
+        self.sr = sr
+        self.isint16 = isint16
         self.model = AutoModel(model=model)
 
     def preprocess(self, audio_data: np.ndarray):
-        audio = audio_data.view(dtype=np.int16)
-        audio = pcm16to32(audio)
-        # print(audio)
-        # print(type(audio))
+        if self.isint16:
+            audio = audio_data.view(dtype=np.int16)
+            audio = pcm16to32(audio)
+        else:
+            audio = audio_data
+        if self.sr != Emotion.MODEL_SAMPLE_RATE:
+            audio = librosa.resample(
+                audio, orig_sr=self.sr, target_sr=Emotion.MODEL_SAMPLE_RATE
+            )
         return audio
 
     def infer(self, audio: np.ndarray[np.float32], output_dir: os.PathLike = None):

@@ -2,21 +2,26 @@ import os
 import json
 from typing import Union
 import paddle
+import librosa
 import numpy as np
 from yacs.config import CfgNode
 from paddlespeech.cli.vector.infer import VectorExecutor
 from paddlespeech.vector.modules.sid_model import SpeakerIdetification
 from paddleaudio.compliance.librosa import melspectrogram
 from paddlespeech.vector.io.batch import feature_normalize
+from ..utils import pcm16to32
 
 
 class Vector:
+    MODEL_SAMPLE_RATE = 16000
+    
     def __init__(
         self,
+        sr: int = 16000,
+        isint16: bool = True,
         enroll_embeddings: os.PathLike = None,
         enroll_audio_dir: os.PathLike = None,
     ):
-        self.executor = VectorExecutor()
         """
         Initialize enroll embeddings.
         enroll_embeddings and enroll_embeddings can not be both None.
@@ -24,6 +29,10 @@ class Vector:
         If enroll_embeddings is not None, load embeddings from the json file.
         If enroll_embeddings is not None and enroll_audio_dir is not None, save embeddings to the json file.
         """
+        self.sr = sr
+        self.isint16 = isint16
+        
+        self.executor = VectorExecutor()
         device = paddle.get_device()
         paddle.set_device(device)
         if device == "cpu":
@@ -128,9 +137,17 @@ class Vector:
     def preprocess(self, audio_data: np.ndarray):
         """Extract the audio feature from the audio data."""
         # stage 1: load the audio sample points
-        waveform = audio_data.view(dtype=np.int16)
-        # 将音频数据转换为float32类型
-        waveform = waveform.astype(np.float32)  ####### 是否需要归一化？
+        if self.isint16:
+            waveform = audio_data.view(dtype=np.int16)
+            # convert to float32
+            waveform = pcm16to32(waveform)
+        else:
+            waveform = audio_data
+
+        if self.sr != Vector.MODEL_SAMPLE_RATE:
+            waveform = librosa.resample(
+                waveform, orig_sr=self.sr, target_sr=Vector.MODEL_SAMPLE_RATE
+            )
 
         # stage 2: get the audio feat
         # Note: Now we only support fbank feature

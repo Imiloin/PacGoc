@@ -28,21 +28,26 @@ warnings.filterwarnings("ignore")
 
 
 class SourceSeparation:
+    MODEL_SAMPLE_RATE = 16000  ####### or 32000 Hz?
+
     def __init__(
         self,
-        ckpt: os.PathLike,
-        resume_ckpt: os.PathLike,
-        query_folder: os.PathLike,
-        output_path: os.PathLike,
-        sample_rate: int = 16000,
+        sr: int = 16000,
+        isint16: bool = True,
+        ckpt: os.PathLike = None,
+        resume_ckpt: os.PathLike = None,
+        query_folder: os.PathLike = None,
+        output_path: os.PathLike = None,
     ):
         """
         Initialize the source separation model, setups the config and load the saved model.
         """
+        self.sr = sr
+        self.isint16 = isint16
         pl.utilities.seed.seed_everything(seed=12412)  # set the random seed
         self.test_key = ["vocals"]  # ["vocals", "drums", "bass", "other"]
         self.config = config
-        self.config.sample_rate = sample_rate
+        self.config.sample_rate = sr
 
         # setup the trainer and enabel GPU
         self.trainer = pl.Trainer(gpus=1, accelerator="auto")
@@ -58,7 +63,7 @@ class SourceSeparation:
             if query_file.endswith(".wav"):
                 temp_q, fs = librosa.load(f_path, sr=None)
                 temp_q = temp_q[:, None]
-                temp_q = prepprocess_audio(temp_q, fs, sample_rate, "mix")
+                temp_q = prepprocess_audio(temp_q, fs, self.sr, "mix")
                 temp = [temp_q]
                 for _ in self.test_key:
                     temp.append(temp_q)
@@ -107,9 +112,15 @@ class SourceSeparation:
         """
         Preprocess the audio data by converting it to 32-bit float.
         """
-        ####### convert the track into 32000 Hz sample rate ?????? 16000 Hz sample rate?
-        audio = audio_data.view(dtype=np.int16)
-        audio = pcm16to32(audio)
+        if self.isint16:
+            audio = audio_data.view(dtype=np.int16)
+            audio = pcm16to32(audio)
+        else:
+            audio = audio_data
+        if self.sr != SourceSeparation.MODEL_SAMPLE_RATE:
+            audio = librosa.resample(
+                audio, orig_sr=self.sr, target_sr=SourceSeparation.MODEL_SAMPLE_RATE
+            )
         return audio
 
     def inference(self, audio: np.ndarray):

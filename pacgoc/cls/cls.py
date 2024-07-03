@@ -2,15 +2,28 @@ import os
 import numpy as np
 import paddle
 import yaml
+import librosa
 from paddlespeech.cli.cls import CLSExecutor
 from paddle.audio.features import LogMelSpectrogram
+from ..utils import pcm16to32
 
 
 class CLS:
-    def __init__(self, model: str = "panns_cnn14", topk: int = 3):
+    MODEL_SAMPLE_RATE = 32000
+
+    def __init__(
+        self,
+        sr: int = 16000,
+        isint16: bool = True,
+        model: str = "panns_cnn14",
+        topk: int = 3,
+    ):
         """
         Init model and other resources.
         """
+        self.sr = sr
+        self.isint16 = isint16
+
         device = paddle.get_device()
         paddle.set_device(device)
         if device == "cpu":
@@ -62,9 +75,17 @@ class CLS:
         Input content can be a text(tts), a file(asr, cls) or a streaming(not supported yet).
         """
         feat_conf = self.cls._conf["feature"]
-        waveform = audio_data.view(dtype=np.int16)
-        # 将音频数据转换为float32类型
-        waveform = waveform.astype(np.float32) ####### 是否需要归一化？
+        if self.isint16:
+            waveform = audio_data.view(dtype=np.int16)
+            # convert to float32
+            waveform = pcm16to32(waveform)
+        else:
+            waveform = audio_data
+
+        if self.sr != CLS.MODEL_SAMPLE_RATE:
+            waveform = librosa.resample(
+                waveform, orig_sr=self.sr, target_sr=CLS.MODEL_SAMPLE_RATE
+            )
 
         # Feature extraction
         feature_extractor = LogMelSpectrogram(

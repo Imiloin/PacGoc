@@ -2,16 +2,19 @@ import os
 import audeer
 import audonnx
 import audinterface
+import librosa
 import numpy as np
+from ...utils import pcm16to32
 
 
-################# to do: change the sampling rate to 16000
 class AgeGender:
+    MODEL_SAMPLE_RATE = 16000
     url = "https://zenodo.org/record/7761387/files/w2v2-L-robust-6-age-gender.25c844af-1.1.1.zip"
 
     def __init__(
         self,
-        sampling_rate: int = 16000,
+        sr: int = 16000,
+        isint16: bool = True,
         model_root: os.PathLike = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "model"
         ),
@@ -22,7 +25,8 @@ class AgeGender:
         """
         Initialize AgeGender model, if not exists, download and extract it.
         """
-        self.sampling_rate = sampling_rate
+        self.sr = sr
+        self.isint16 = isint16
         # download and extract model
         audeer.mkdir(cache_root)
         dst_path = os.path.join(cache_root, "model.zip")
@@ -37,7 +41,21 @@ class AgeGender:
 
     def preprocess(self, audio_data: np.ndarray):
         """
-        Create interface for feature extraction
+        Preprocess the audio data, convert to float32 and resample to 16000Hz if necessary.
+        """
+        if self.isint16:
+            audio_data = audio_data.view(dtype=np.int16)
+            # convert to float32
+            audio_data = pcm16to32(audio_data)
+        # if self.sr != AgeGender.MODEL_SAMPLE_RATE:
+        #     audio_data = librosa.resample(
+        #         audio_data, orig_sr=self.sr, target_sr=AgeGender.MODEL_SAMPLE_RATE
+        #     )
+        return audio_data
+
+    def infer(self, audio_data: np.ndarray[np.float32]):
+        """
+        Create interface for feature extraction and infer age and gender
         """
         outputs = ["logits_age", "logits_gender"]
         self.interface = audinterface.Feature(
@@ -47,19 +65,11 @@ class AgeGender:
                 "outputs": outputs,
                 "concat": True,
             },
-            sampling_rate=self.sampling_rate,
-            resample=True,
+            sampling_rate=self.sr,
+            resample=True,  # auto resample
             verbose=True,
         )
-        audio_data = audio_data.view(dtype=np.int16)
-        audio_data = audio_data.astype(np.float32)
-        return audio_data
-
-    def infer(self, audio_data: np.ndarray[np.float32]):
-        """
-        Infer age and gender
-        """
-        return self.interface.process_signal(audio_data, self.sampling_rate)
+        return self.interface.process_signal(audio_data, self.sr)
 
     def postprocess(self, infer_result) -> dict:
         """
