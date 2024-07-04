@@ -2,9 +2,11 @@ from pacgoc.cls import CLS
 import argparse
 import pandas as pd
 import gradio as gr
+import os
 import threading
 import time
 import sys
+import wave
 
 source = None
 SAMPLING_RATE = 48000
@@ -15,6 +17,18 @@ isint16 = False
 def signal_handler(sig, frame):
     print("Exiting...")
     sys.exit(0)
+
+
+def is_valid_wav(path):
+    if not os.path.isfile(path):
+        return False
+    if not path.lower().endswith(".wav"):
+        return False
+    try:
+        with wave.open(path, "rb") as f:
+            return True
+    except wave.Error:
+        return False
 
 
 def gen_result():
@@ -57,8 +71,17 @@ elif args.source == "speaker":
     # SAMPLING_RATE can be changed
     source = Recorder(sr=SAMPLING_RATE)
     th_receive = threading.Thread(target=source.record, daemon=True)
+elif is_valid_wav(args.source):
+    print("Using WAV file source")
+    from pacgoc.readwav import Wave
+
+    source = Wave(args.source)
+    SAMPLING_RATE = source.get_sample_rate()
+    isint16 = True
+    th_receive = threading.Thread(target=source.read, daemon=True)
 else:
     print("Invalid source")
+    print("Usage: python app.py --source [pcie|speaker|path/to/wav]")
     exit(1)
 
 # Start the audio source
@@ -74,6 +97,8 @@ th_result.start()
 
 with gr.Blocks() as demo:
     cls_result = gr.Dataframe()
-    demo.load(get_cls_result, inputs=None, outputs=cls_result, every=1)
+    demo.load(
+        get_cls_result, inputs=None, outputs=cls_result, every=1, show_progress=False
+    )
 
-demo.queue().launch()
+demo.launch()

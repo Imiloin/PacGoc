@@ -19,7 +19,6 @@ class Recorder:
         该函数含有死循环，需要在其他线程中调用
         录制结果为 float32 格式的音频数据，采样率为 self.sr，单声道
         """
-        
         with sc.get_microphone(
             id=str(sc.default_speaker().name), include_loopback=True
         ).recorder(samplerate=self.sr, channels=1) as mic:
@@ -32,7 +31,7 @@ class Recorder:
         获取队列中的音频数据时长，单位为秒
         """
         return self.audio_data_queue.qsize() * Recorder.BUFFER_SIZE / self.sr
-    
+
     def get_queue_data(self) -> np.ndarray:
         """
         将队列中的数据包合并成一个数组并返回
