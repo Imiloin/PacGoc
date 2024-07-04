@@ -19,6 +19,7 @@ class Vector:
         self,
         sr: int = 16000,
         isint16: bool = True,
+        threshold: float = 0.7,
         enroll_embeddings: os.PathLike = None,
         enroll_audio_dir: os.PathLike = None,
     ):
@@ -31,6 +32,7 @@ class Vector:
         """
         self.sr = sr
         self.isint16 = isint16
+        self.threshold = threshold
         
         self.executor = VectorExecutor()
         device = paddle.get_device()
@@ -66,7 +68,8 @@ class Vector:
                     print("Invalid enroll_embeddings file path.")
         else:
             if self._is_valid_json(enroll_embeddings):
-                self.enroll_embeddings = json.load(enroll_embeddings)
+                with open(enroll_embeddings, 'r') as f:
+                    self.enroll_embeddings = json.load(f)
             else:
                 raise ValueError("Invalid enroll_embeddings file path.")
 
@@ -221,8 +224,7 @@ class Vector:
         best_score = best_match[1]
 
         # Check if the score is above a certain threshold
-        threshold = 0.7
-        if best_score < threshold:
+        if best_score < self.threshold:
             return "Unknown"
         else:
             return speaker_id

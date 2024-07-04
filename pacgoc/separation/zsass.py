@@ -12,10 +12,11 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from utils import create_folder, prepprocess_audio
-from models.asp_model import ZeroShotASP, SeparatorModel, AutoTaggingWarpper
+from models.asp_model import ZeroShotASP, AutoTaggingWarpper
+from models.separator import SeparatorModel
 from data_processor import MusdbDataset
 
-import config
+import asp_config
 import htsat_config
 from models.htsat import HTSAT_Swin_Transformer
 from sed_model import SEDWrapper
@@ -38,6 +39,7 @@ class SourceSeparation:
         resume_ckpt: os.PathLike = None,
         query_folder: os.PathLike = None,
         output_path: os.PathLike = None,
+        output_filename: str = "pred.wav",
     ):
         """
         Initialize the source separation model, setups the config and load the saved model.
@@ -46,8 +48,7 @@ class SourceSeparation:
         self.isint16 = isint16
         pl.utilities.seed.seed_everything(seed=12412)  # set the random seed
         self.test_key = ["vocals"]  # ["vocals", "drums", "bass", "other"]
-        self.config = config
-        self.config.sample_rate = sr
+        self.config = asp_config
 
         # setup the trainer and enabel GPU
         self.trainer = pl.Trainer(gpus=1, accelerator="auto")
@@ -75,6 +76,7 @@ class SourceSeparation:
 
         assert output_path is not None, "output_path should not be None"
         self.config.wave_output_path = output_path
+        self.config.output_filename = output_filename
 
         create_folder(output_path)
 

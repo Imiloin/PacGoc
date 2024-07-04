@@ -15,26 +15,26 @@ class AgeGender:
         self,
         sr: int = 16000,
         isint16: bool = True,
-        model_root: os.PathLike = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "model"
-        ),
-        cache_root: os.PathLike = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "cache"
-        ),
+        model_root: os.PathLike = None,
     ):
         """
         Initialize AgeGender model, if not exists, download and extract it.
         """
         self.sr = sr
         self.isint16 = isint16
-        # download and extract model
-        audeer.mkdir(cache_root)
-        dst_path = os.path.join(cache_root, "model.zip")
 
-        if not os.path.exists(dst_path):
-            audeer.download_url(AgeGender.url, dst_path, verbose=True)
-
+        # if model is not specified, download and extract model
         if not os.path.exists(model_root):
+            print("Downloading and extracting AgeGender model...")
+            model_root = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "model"
+            )
+            cache_root = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "cache"
+            )
+            audeer.mkdir(cache_root)
+            dst_path = os.path.join(cache_root, "model.zip")
+            audeer.download_url(AgeGender.url, dst_path, verbose=True)
             audeer.extract_archive(dst_path, model_root, verbose=True)
 
         self.model = audonnx.load(model_root)
@@ -76,10 +76,11 @@ class AgeGender:
         Postprocess the inference result, return a dictionary with age and gender.
         """
         res = {}
+        # ignore child class
         if infer_result["female"].iloc[0] < infer_result["male"].iloc[0]:
-            res["sex"] = "male"
+            res["gender"] = "男/Male"
         else:
-            res["sex"] = "female"
+            res["gender"] = "女/Female"
         res["age"] = round(infer_result["age"].iloc[0] * 100)
         return res
 
