@@ -1,5 +1,5 @@
+# reference: https://github.com/github/linguist/blob/master/docs/overrides.md
 # Override jupyter in Github language stats for more accurate estimate of repo code languages
-# reference: https://github.com/github/linguist/blob/master/docs/overrides.md#generated-code
 *.ipynb linguist-generated
 # Exclude driver code from language stats
 driver/* linguist-vendored

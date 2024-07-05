@@ -3,6 +3,16 @@ import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # -----------------------------------------------------------------------------
+# ON/OFF
+# -----------------------------------------------------------------------------
+
+AUDIO_CLASSIFIER_ON = True
+SPEAKER_PROFILING_ON = True
+SPEAKER_VERIFICATION_ON = True
+AUTOMATIC_SPEECH_RECOGNITION_ON = True
+AUDIO_SOURCE_SEPARATION_ON = True
+
+# -----------------------------------------------------------------------------
 # Speaker Profiling
 # -----------------------------------------------------------------------------
 

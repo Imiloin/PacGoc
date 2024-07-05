@@ -11,31 +11,28 @@ sys.path.append(str(current_dir))
 # Generate and update config_user.py
 # -----------------------------------------------------------------------------
 
-# 定义config.py和config_user.py的路径
-current_dir = Path(__file__).parent
 config_path = current_dir / "config.py"
 config_user_path = current_dir / "config_user.py"
 
-# 检查config_user.py是否存在
+# check if config_user.py exists
 if not config_user_path.exists():
-    # 如果不存在，则复制config.py为config_user.py
     shutil.copy(config_path, config_user_path)
 else:
-    # 如果存在，则检查config_user.py是否包含config.py中的所有条目
-    with open(config_path, 'r') as f:
-        config_vars = {line.split('=')[0].strip() for line in f if '=' in line}
-    
-    with open(config_user_path, 'r') as f:
-        user_config_vars = {line.split('=')[0].strip() for line in f if '=' in line}
-    
+    # check if config_user.py is up-to-date with config.py
+    with open(config_path, "r") as f:
+        config_vars = {line.split("=")[0].strip() for line in f if "=" in line}
+
+    with open(config_user_path, "r") as f:
+        user_config_vars = {line.split("=")[0].strip() for line in f if "=" in line}
+
     missing_vars = config_vars - user_config_vars
-    
-    # 如果config_user.py缺少某些条目，则从config.py中复制这些条目
+
+    # update config_user.py with missing variables from config.py
     if missing_vars:
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             config_lines = f.readlines()
-        
-        with open(config_user_path, 'a') as f:
+
+        with open(config_user_path, "a") as f:
             for var in missing_vars:
                 for line in config_lines:
                     if line.startswith(var):
@@ -43,6 +40,10 @@ else:
                         break
 
 import config_user
+
+# -----------------------------------------------------------------------------
+# Import packages and basic setup
+# -----------------------------------------------------------------------------
 
 from pacgoc.cls import CLS
 from pacgoc.profiling import AgeGender
@@ -58,6 +59,7 @@ import time
 import signal
 import wave
 
+INTERVAL = 10  # running interval, in seconds
 source = None
 SAMPLING_RATE = 48000
 isint16 = False
@@ -67,6 +69,10 @@ import paddle
 
 paddle.utils.run_check()
 
+# -----------------------------------------------------------------------------
+# utils
+# -----------------------------------------------------------------------------
+
 
 # Use Ctrl+C to quit the program
 def signal_handler(sig, frame):
@@ -75,10 +81,6 @@ def signal_handler(sig, frame):
 
 
 signal.signal(signal.SIGINT, signal_handler)
-
-# -----------------------------------------------------------------------------
-# utils
-# -----------------------------------------------------------------------------
 
 
 def is_valid_wav(path):
@@ -91,6 +93,16 @@ def is_valid_wav(path):
             return True
     except wave.Error:
         return False
+
+
+# -----------------------------------------------------------------------------
+# PacGoc
+# -----------------------------------------------------------------------------
+
+
+def set_interval(interval):
+    global INTERVAL
+    INTERVAL = interval
 
 
 # -----------------------------------------------------------------------------
@@ -199,7 +211,7 @@ def gen_result():
     while True:
         audio_len = source.get_queue_size()
         print(audio_len)
-        if audio_len > 10:
+        if audio_len > INTERVAL:
             audio_data = source.get_queue_data()
             # audio classification
             if cls_on:
@@ -237,7 +249,9 @@ def gen_result():
             # audio source separation
             if separation_on:
                 separation(audio_data)
-                separation_res = os.path.join(config_user.output_dir, config_user.output_filename)
+                separation_res = os.path.join(
+                    config_user.output_dir, config_user.output_filename
+                )
             else:
                 separation_res = du
         time.sleep(1)
@@ -294,33 +308,38 @@ vector = None
 asr = None
 separation = None
 
-cls = CLS(sr=SAMPLING_RATE, isint16=isint16)
-age_gender = AgeGender(
-    sr=SAMPLING_RATE,
-    isint16=isint16,
-    model_root=config_user.age_gender_model_root,
-)
-emotion = Emotion(sr=SAMPLING_RATE, isint16=isint16)
-vector = Vector(
-    sr=SAMPLING_RATE,
-    isint16=isint16,
-    enroll_embeddings=config_user.enroll_embeddings_json,
-    enroll_audio_dir=config_user.enroll_audio_dir,
-)
-asr = ASR(
-    sr=SAMPLING_RATE,
-    isint16=isint16,
-    model=config_user.asr_model_type,
-)
-separation = SourceSeparation(
-    sr=SAMPLING_RATE,
-    isint16=isint16,
-    ckpt=config_user.ckpt,
-    resume_ckpt=config_user.resume_ckpt,
-    query_folder=config_user.query_folder,
-    output_path=config_user.output_dir,
-    output_filename=config_user.output_filename,
-)
+if config_user.AUDIO_CLASSIFIER_ON:
+    cls = CLS(sr=SAMPLING_RATE, isint16=isint16)
+if config_user.SPEAKER_PROFILING_ON:
+    age_gender = AgeGender(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        model_root=config_user.age_gender_model_root,
+    )
+    emotion = Emotion(sr=SAMPLING_RATE, isint16=isint16)
+if config_user.SPEAKER_VERIFICATION_ON:
+    vector = Vector(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        enroll_embeddings=config_user.enroll_embeddings_json,
+        enroll_audio_dir=config_user.enroll_audio_dir,
+    )
+if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
+    asr = ASR(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        model=config_user.asr_model_type,
+    )
+if config_user.AUDIO_SOURCE_SEPARATION_ON:
+    separation = SourceSeparation(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        ckpt=config_user.ckpt,
+        resume_ckpt=config_user.resume_ckpt,
+        query_folder=config_user.query_folder,
+        output_path=config_user.output_dir,
+        output_filename=config_user.output_filename,
+    )
 
 # Start the result generator
 th_result = threading.Thread(target=gen_result, daemon=True)
@@ -328,86 +347,115 @@ th_result.start()
 
 
 # -----------------------------------------------------------------------------
-# Gradio interface
+# Gradio webui
 # -----------------------------------------------------------------------------
 
-with gr.Blocks() as demo:
-    gr.Markdown("# PACGOC")
-    with gr.Tab("音频分类"):
-        gr.Markdown("## 音频分类")
-        enable_cls = gr.Checkbox(value=False, label="Enable Audio Classification")
-        enable_cls.change(cls_checkbox, inputs=[enable_cls], outputs=None)
-        cls_result = gr.Dataframe()
-        demo.load(
-            get_cls_result,
-            inputs=None,
-            outputs=cls_result,
-            every=1,
-            show_progress=False,
-        )
-    with gr.Tab("音频人物画像"):
-        gr.Markdown("## 音频人物画像")
-        enable_profile = gr.Checkbox(value=False, label="Enable Speaker Profiling")
-        enable_profile.change(profile_checkbox, inputs=[enable_profile], outputs=None)
-        profile_result = gr.Dataframe()
-        demo.load(
-            get_profile_result,
-            inputs=None,
-            outputs=profile_result,
-            every=1,
-            show_progress=False,
-        )
-    with gr.Tab("声纹识别"):
-        gr.Markdown("## 声纹识别")
-        enable_verify = gr.Checkbox(value=False, label="Enable Speaker Verification")
-        enable_verify.change(verify_checkbox, inputs=[enable_verify], outputs=None)
-        verify_result = gr.HighlightedText(
-            show_legend=False,
-            show_label=False,
-            color_map=config_user.color_map,
-        )
-        demo.load(
-            get_verify_result,
-            inputs=None,
-            outputs=verify_result,
-            every=1,
-            show_progress=False,
-        )
-    with gr.Tab("自动语音识别"):
-        gr.Markdown("## 自动语音识别")
-        enable_asr = gr.Checkbox(
-            value=False, label="Enable Automatic Speech Recognition"
-        )
-        enable_asr.change(asr_checkbox, inputs=[enable_asr], outputs=None)
-        asr_result = gr.TextArea(
-            every=1,
-        )
-        demo.load(
-            get_asr_result,
-            inputs=None,
-            outputs=asr_result,
-            every=1,
-            show_progress=False,
-        )
-    with gr.Tab("音乐人声分离"):
-        gr.Markdown("## 音乐人声分离")
-        enable_separation = gr.Checkbox(
-            value=False, label="Enable Audio Source Separation"
-        )
-        enable_separation.change(
-            separation_checkbox, inputs=[enable_separation], outputs=None
-        )
-        separation_result = gr.Audio(
-            label="vocal",
-            type="filepath",
-            every=1,
-        )
-        demo.load(
-            get_separation_result,
-            inputs=None,
-            outputs=separation_result,
-            every=1,
-            show_progress=False,
-        )
+assets_dir = os.path.join(current_dir, "assets")
+pacgoc_logo = os.path.join(assets_dir, "pacgoc.svg")
 
-demo.launch()
+with gr.Blocks() as demo:
+    gr.Markdown("# Control Panel")
+    with gr.Tab("PacGoc"):
+        interval = gr.Slider(
+            minimum=2,
+            maximum=12,
+            step=1,
+            value=10,
+            label="Interval (seconds)",
+            info="Recognized audio will be updated every interval seconds.",
+        )
+        gr.HTML(
+            f"""
+        <div align="center">
+            <img src=/file={pacgoc_logo} alt="logo" width="150"/>
+        </div>
+        """
+        )
+        interval.change(set_interval, inputs=[interval], outputs=None)
+    if config_user.AUDIO_CLASSIFIER_ON:
+        with gr.Tab("音频分类"):
+            gr.Markdown("## 音频分类")
+            enable_cls = gr.Checkbox(value=False, label="Enable Audio Classification")
+            enable_cls.change(cls_checkbox, inputs=[enable_cls], outputs=None)
+            cls_result = gr.Dataframe()
+            demo.load(
+                get_cls_result,
+                inputs=None,
+                outputs=cls_result,
+                every=1,
+                show_progress=False,
+            )
+    if config_user.SPEAKER_PROFILING_ON:
+        with gr.Tab("音频人物画像"):
+            gr.Markdown("## 音频人物画像")
+            enable_profile = gr.Checkbox(value=False, label="Enable Speaker Profiling")
+            enable_profile.change(
+                profile_checkbox, inputs=[enable_profile], outputs=None
+            )
+            profile_result = gr.Dataframe()
+            demo.load(
+                get_profile_result,
+                inputs=None,
+                outputs=profile_result,
+                every=1,
+                show_progress=False,
+            )
+    if config_user.SPEAKER_VERIFICATION_ON:
+        with gr.Tab("声纹识别"):
+            gr.Markdown("## 声纹识别")
+            enable_verify = gr.Checkbox(
+                value=False, label="Enable Speaker Verification"
+            )
+            enable_verify.change(verify_checkbox, inputs=[enable_verify], outputs=None)
+            verify_result = gr.HighlightedText(
+                show_legend=False,
+                show_label=False,
+                color_map=config_user.color_map,
+            )
+            demo.load(
+                get_verify_result,
+                inputs=None,
+                outputs=verify_result,
+                every=1,
+                show_progress=False,
+            )
+    if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
+        with gr.Tab("自动语音识别"):
+            gr.Markdown("## 自动语音识别")
+            enable_asr = gr.Checkbox(
+                value=False, label="Enable Automatic Speech Recognition"
+            )
+            enable_asr.change(asr_checkbox, inputs=[enable_asr], outputs=None)
+            asr_result = gr.TextArea(
+                every=1,
+            )
+            demo.load(
+                get_asr_result,
+                inputs=None,
+                outputs=asr_result,
+                every=1,
+                show_progress=False,
+            )
+    if config_user.AUDIO_SOURCE_SEPARATION_ON:
+        with gr.Tab("音乐人声分离"):
+            gr.Markdown("## 音乐人声分离")
+            enable_separation = gr.Checkbox(
+                value=False, label="Enable Audio Source Separation"
+            )
+            enable_separation.change(
+                separation_checkbox, inputs=[enable_separation], outputs=None
+            )
+            separation_result = gr.Audio(
+                label="vocal",
+                type="filepath",
+                every=1,
+            )
+            demo.load(
+                get_separation_result,
+                inputs=None,
+                outputs=separation_result,
+                every=1,
+                show_progress=False,
+            )
+
+demo.launch(allowed_paths=[assets_dir])
