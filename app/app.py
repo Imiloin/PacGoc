@@ -27,6 +27,10 @@ SAMPLING_RATE = 48000
 isint16 = False
 du = os.path.join(current_dir, "..", "wave", "du.wav")
 
+import paddle
+
+paddle.utils.run_check()
+
 
 # Use Ctrl+C to quit the program
 def signal_handler(sig, frame):
@@ -154,6 +158,7 @@ def gen_result():
     global verify_on, verify_res
     global asr_on, asr_res
     global separation_on, separation_res, du
+    # flush the audio buffer
     _ = source.get_queue_data()
     while True:
         audio_len = source.get_queue_size()
@@ -246,6 +251,13 @@ else:
 th_receive.start()
 
 # Initialize the models
+cls = None
+age_gender = None
+emotion = None
+vector = None
+asr = None
+separation = None
+
 cls = CLS(sr=SAMPLING_RATE, isint16=isint16)
 age_gender = AgeGender(
     sr=SAMPLING_RATE,

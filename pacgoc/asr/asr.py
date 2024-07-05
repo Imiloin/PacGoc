@@ -1,9 +1,9 @@
 import librosa
 import whisper
 import numpy as np
-from ..utils import pcm16to32
 from typing import List, Union
 from whisper.decoding import DecodingResult
+from ..utils import pcm16to32
 
 
 class ASR:

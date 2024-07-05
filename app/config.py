@@ -20,7 +20,7 @@ color_map = {"Unknown": "gray", "A": "green"}
 # Automatic Speech Recognition
 # -----------------------------------------------------------------------------
 
-asr_model_type = "medium"
+asr_model_type = "tiny"
 
 # -----------------------------------------------------------------------------
 # Audio Source Separation

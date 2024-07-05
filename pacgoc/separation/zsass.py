@@ -34,7 +34,7 @@ class SourceSeparation:
     def __init__(
         self,
         sr: int = 16000,
-        isint16: bool = True,
+        isint16: bool = False,
         ckpt: os.PathLike = None,
         resume_ckpt: os.PathLike = None,
         query_folder: os.PathLike = None,

@@ -68,6 +68,14 @@ class CLS:
         self.cls.model = model_class(extract_embedding=False)
         self.cls.model.set_state_dict(model_dict)
         self.cls.model.eval()
+        
+        # run a test
+        if isint16:
+            test_audio = np.zeros(shape=(CLS.MODEL_SAMPLE_RATE,), dtype=np.int16)
+        else:
+            test_audio = np.zeros(shape=(CLS.MODEL_SAMPLE_RATE,), dtype=np.float32)
+        self(test_audio)
+        print("Audio Classification model loaded")
 
     def preprocess(self, audio_data: np.ndarray):
         """
