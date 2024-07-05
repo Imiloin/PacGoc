@@ -13,7 +13,7 @@ class Emotion:
         self,
         sr: int = 16000,
         isint16: bool = True,
-        model: os.PathLike = "iic/emotion2vec_base_finetuned",
+        model: os.PathLike = "iic/emotion2vec_plus_base",
     ):
         """
         Initialize the Emotion class.

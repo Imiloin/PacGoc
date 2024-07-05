@@ -1,2 +1,4 @@
 soundcard==0.4.3
 paddlepaddle-gpu==2.6.1
+numpy==1.26.4
+librosa==0.10.1

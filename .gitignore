@@ -1,11 +1,11 @@
 # My staff
-temp/
+/temp/
+/sample/
+/models/
+.vscode/
 *.code-workspace
 *:Zone.Identifier
-test*.py
-.vscode/
-sample/
-/models/
+/test*.py
 
 # logs
 **/lightning_logs/
