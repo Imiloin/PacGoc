@@ -10,6 +10,9 @@ sample/
 # logs
 **/lightning_logs/
 
+# config
+config_user.py
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

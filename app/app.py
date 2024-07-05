@@ -1,12 +1,48 @@
 import os
 import sys
 from pathlib import Path
+import shutil
 
 # add current directory to sys.path to import pcie module
 current_dir = Path(__file__).parent
 sys.path.append(str(current_dir))
 
-import config
+# -----------------------------------------------------------------------------
+# Generate and update config_user.py
+# -----------------------------------------------------------------------------
+
+# 定义config.py和config_user.py的路径
+current_dir = Path(__file__).parent
+config_path = current_dir / "config.py"
+config_user_path = current_dir / "config_user.py"
+
+# 检查config_user.py是否存在
+if not config_user_path.exists():
+    # 如果不存在，则复制config.py为config_user.py
+    shutil.copy(config_path, config_user_path)
+else:
+    # 如果存在，则检查config_user.py是否包含config.py中的所有条目
+    with open(config_path, 'r') as f:
+        config_vars = {line.split('=')[0].strip() for line in f if '=' in line}
+    
+    with open(config_user_path, 'r') as f:
+        user_config_vars = {line.split('=')[0].strip() for line in f if '=' in line}
+    
+    missing_vars = config_vars - user_config_vars
+    
+    # 如果config_user.py缺少某些条目，则从config.py中复制这些条目
+    if missing_vars:
+        with open(config_path, 'r') as f:
+            config_lines = f.readlines()
+        
+        with open(config_user_path, 'a') as f:
+            for var in missing_vars:
+                for line in config_lines:
+                    if line.startswith(var):
+                        f.write(line)
+                        break
+
+import config_user
 
 from pacgoc.cls import CLS
 from pacgoc.profiling import AgeGender
@@ -201,7 +237,7 @@ def gen_result():
             # audio source separation
             if separation_on:
                 separation(audio_data)
-                separation_res = os.path.join(config.output_dir, config.output_filename)
+                separation_res = os.path.join(config_user.output_dir, config_user.output_filename)
             else:
                 separation_res = du
         time.sleep(1)
@@ -262,28 +298,28 @@ cls = CLS(sr=SAMPLING_RATE, isint16=isint16)
 age_gender = AgeGender(
     sr=SAMPLING_RATE,
     isint16=isint16,
-    model_root=config.age_gender_model_root,
+    model_root=config_user.age_gender_model_root,
 )
 emotion = Emotion(sr=SAMPLING_RATE, isint16=isint16)
 vector = Vector(
     sr=SAMPLING_RATE,
     isint16=isint16,
-    enroll_embeddings=config.enroll_embeddings_json,
-    enroll_audio_dir=config.enroll_audio_dir,
+    enroll_embeddings=config_user.enroll_embeddings_json,
+    enroll_audio_dir=config_user.enroll_audio_dir,
 )
 asr = ASR(
     sr=SAMPLING_RATE,
     isint16=isint16,
-    model=config.asr_model_type,
+    model=config_user.asr_model_type,
 )
 separation = SourceSeparation(
     sr=SAMPLING_RATE,
     isint16=isint16,
-    ckpt=config.ckpt,
-    resume_ckpt=config.resume_ckpt,
-    query_folder=config.query_folder,
-    output_path=config.output_dir,
-    output_filename=config.output_filename,
+    ckpt=config_user.ckpt,
+    resume_ckpt=config_user.resume_ckpt,
+    query_folder=config_user.query_folder,
+    output_path=config_user.output_dir,
+    output_filename=config_user.output_filename,
 )
 
 # Start the result generator
@@ -328,7 +364,7 @@ with gr.Blocks() as demo:
         verify_result = gr.HighlightedText(
             show_legend=False,
             show_label=False,
-            color_map=config.color_map,
+            color_map=config_user.color_map,
         )
         demo.load(
             get_verify_result,
