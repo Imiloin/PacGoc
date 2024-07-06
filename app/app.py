@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 import shutil
+import numpy as np
 
 # add current directory to sys.path to import pcie module
 current_dir = Path(__file__).parent
@@ -60,6 +61,7 @@ import signal
 import wave
 
 INTERVAL = 10  # running interval, in seconds
+MAX_AUDIO_LEN = 30  # maximum audio length, in seconds
 source = None
 SAMPLING_RATE = 48000
 isint16 = False
@@ -99,10 +101,34 @@ def is_valid_wav(path):
 # PacGoc
 # -----------------------------------------------------------------------------
 
+LISTENING = False
+
 
 def set_interval(interval):
     global INTERVAL
     INTERVAL = interval
+
+
+def start_listen():
+    global LISTENING
+    LISTENING = True
+    print("Listening...")
+    return True
+
+
+def end_listen():
+    global LISTENING
+    if LISTENING:
+        print("End listening")
+        LISTENING = False
+        audio_data = source.get_queue_data()
+        inference(audio_data)
+    return False
+
+
+def get_listen_status():
+    global LISTENING
+    return LISTENING
 
 
 # -----------------------------------------------------------------------------
@@ -200,60 +226,70 @@ def get_separation_result():
 # -----------------------------------------------------------------------------
 
 
-def gen_result():
+def inference(audio_data: np.ndarray):
     global cls_on, cls_res
     global profile_on, profile_res
     global verify_on, verify_res
     global asr_on, asr_res
     global separation_on, separation_res, du
+    # audio classification
+    if cls_on:
+        cls_res = cls(audio_data)
+        print(cls_res)
+    else:
+        cls_res = []
+    # speaker profiling
+    if profile_on:
+        agegender_res = age_gender(audio_data)
+        emotion_res = emotion(audio_data)
+        profile_res = [
+            (
+                agegender_res["gender"],
+                agegender_res["age"],
+                emotion_res,
+            ),
+        ]
+        print(profile_res)
+    else:
+        profile_res = []
+    # speaker verification
+    if verify_on:
+        verify_res = vector(audio_data)
+        print(verify_res)
+    else:
+        verify_res = "Unknown"
+    # automatic speech recognition
+    if asr_on:
+        res = asr(audio_data)
+        print(res)
+        asr_res = asr_res + "\n" + res
+    else:
+        asr_res = ""
+    # audio source separation
+    if separation_on:
+        separation(audio_data)
+        separation_res = os.path.join(
+            config_user.output_dir, config_user.output_filename
+        )
+    else:
+        separation_res = du
+
+
+def gen_result():
+    global LISTENING
     # flush the audio buffer
     _ = source.get_queue_data()
     while True:
         audio_len = source.get_queue_size()
         print(audio_len)
-        if audio_len > INTERVAL:
-            audio_data = source.get_queue_data()
-            # audio classification
-            if cls_on:
-                cls_res = cls(audio_data)
-                print(cls_res)
-            else:
-                cls_res = []
-            # speaker profiling
-            if profile_on:
-                agegender_res = age_gender(audio_data)
-                emotion_res = emotion(audio_data)
-                profile_res = [
-                    (
-                        agegender_res["gender"],
-                        agegender_res["age"],
-                        emotion_res,
-                    ),
-                ]
-                print(profile_res)
-            else:
-                profile_res = []
-            # speaker verification
-            if verify_on:
-                verify_res = vector(audio_data)
-                print(verify_res)
-            else:
-                verify_res = "Unknown"
-            # automatic speech recognition
-            if asr_on:
-                res = asr(audio_data)
-                print(res)
-                asr_res = asr_res + "\n" + res
-            else:
-                asr_res = ""
-            # audio source separation
-            if separation_on:
-                separation(audio_data)
-                separation_res = os.path.join(
-                    config_user.output_dir, config_user.output_filename
-                )
-            else:
-                separation_res = du
+        if LISTENING:
+            if audio_len > MAX_AUDIO_LEN:
+                print("Max audio length reached, auto end listening.")
+                end_listen()
+        else:
+            if audio_len > INTERVAL:
+                audio_data = source.get_queue_data()
+                inference(audio_data)
         time.sleep(1)
 
 
@@ -352,18 +388,52 @@ th_result.start()
 
 assets_dir = os.path.join(current_dir, "assets")
 pacgoc_logo = os.path.join(assets_dir, "pacgoc.svg")
+# remove loading orange border
+css = """
+.generating {
+    border: none;
+}
+"""
 
-with gr.Blocks() as demo:
-    gr.Markdown("# Control Panel")
+with gr.Blocks(css=css) as demo:
+    gr.Markdown("# PacGoc Control Panel")
     with gr.Tab("PacGoc"):
         interval = gr.Slider(
             minimum=2,
-            maximum=12,
+            maximum=20,
             step=1,
             value=10,
             label="Interval (seconds)",
             info="Recognized audio will be updated every interval seconds.",
         )
+        with gr.Row():
+            start_btn = gr.Button("Start listening", scale=3)
+            end_btn = gr.Button("End listening", scale=3)
+            listen_status = gr.Checkbox(
+                value=False,
+                label="Listening",
+                interactive=False,
+                scale=1,
+            )
+            start_btn.click(
+                start_listen,
+                inputs=None,
+                outputs=listen_status,
+                show_progress="hidden",
+            )
+            end_btn.click(
+                end_listen,
+                inputs=None,
+                outputs=listen_status,
+                show_progress="hidden",
+            )
+            demo.load(
+                get_listen_status,
+                inputs=None,
+                outputs=listen_status,
+                every=1,
+                show_progress="hidden",
+            )
         gr.HTML(
             f"""
         <div align="center">
