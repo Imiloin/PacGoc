@@ -4,14 +4,16 @@ import soundcard as sc
 
 
 class Recorder:
-    BUFFER_SIZE = 4096
+    BUFFER_SIZE = 2048
 
     def __init__(self, sr=48000):
         self.sr = sr
         self.audio_data_queue = Queue()
         print("Available speakers:", sc.all_speakers())
-        default_speaker = sc.default_speaker()
-        print("Using speaker:", default_speaker.name)
+        self.default_speaker = sc.default_speaker()
+        print("Using speaker:", self.default_speaker.name)
+        self.default_speaker_channels = self.default_speaker.channels
+        print("Default speaker channels:", self.default_speaker_channels)
 
     def record(self):
         """
@@ -20,11 +22,12 @@ class Recorder:
         录制结果为 float32 格式的音频数据，采样率为 self.sr，单声道
         """
         with sc.get_microphone(
-            id=str(sc.default_speaker().name), include_loopback=True
+            id=str(self.default_speaker.name), include_loopback=True
         ).recorder(samplerate=self.sr, channels=1) as mic:
             while True:
                 data = mic.record(Recorder.BUFFER_SIZE)
-                self.audio_data_queue.put(data.reshape(-1))
+                data = data.reshape(-1) * self.default_speaker_channels
+                self.audio_data_queue.put(data)
 
     def get_queue_size(self) -> float:
         """

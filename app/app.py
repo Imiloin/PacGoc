@@ -320,8 +320,6 @@ def inference(audio_data: np.ndarray):
         separation_res = os.path.join(
             config_user.output_dir, config_user.output_filename
         )
-    # else:
-    #     separation_res = du
 
 
 def gen_result():
