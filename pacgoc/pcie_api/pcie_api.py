@@ -14,7 +14,7 @@ from queue import Queue
 class PCIe:
     PACK_START = 8  # 包的数据起始位置
     PACK_TIME = 128 / 48000  # 一个包中音频数据的时长，单位为秒
-    INTERVAL = 0.002  # 循环间隔设置为两毫秒
+    INTERVAL = 0.0016  # 循环间隔，<2ms
 
     def __init__(self):
         self._obj = pcie.PCIE()

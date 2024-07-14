@@ -14,7 +14,7 @@ from ..utils import pcm16to32
 
 class Vector:
     MODEL_SAMPLE_RATE = 16000
-    
+
     def __init__(
         self,
         sr: int = 16000,
@@ -33,7 +33,7 @@ class Vector:
         self.sr = sr
         self.isint16 = isint16
         self.threshold = threshold
-        
+
         self.executor = VectorExecutor()
         device = paddle.get_device()
         paddle.set_device(device)
@@ -57,7 +57,9 @@ class Vector:
             self.enroll_embeddings = {}
             for enroll_audio in wav_files:
                 enroll_embedding = self.executor(enroll_audio)
-                self.enroll_embeddings[enroll_audio] = (
+                audio_file_name_with_extension = os.path.basename(enroll_audio)
+                audio_file_name, _ = os.path.splitext(audio_file_name_with_extension)
+                self.enroll_embeddings[audio_file_name] = (
                     enroll_embedding.tolist()
                 )  # convert numpy array to list
             if enroll_embeddings is not None:
@@ -68,7 +70,7 @@ class Vector:
                     print("Invalid enroll_embeddings file path.")
         else:
             if self._is_valid_json(enroll_embeddings):
-                with open(enroll_embeddings, 'r') as f:
+                with open(enroll_embeddings, "r") as f:
                     self.enroll_embeddings = json.load(f)
             else:
                 raise ValueError("Invalid enroll_embeddings file path.")
@@ -202,7 +204,7 @@ class Vector:
         """
         embedding = self.executor._outputs["embedding"]
         return embedding
-    
+
     def verify(self, embedding: Union[str, os.PathLike], threshold: float = 0.7) -> str:
         """
         Verify the speaker by the audio embedding.
@@ -228,7 +230,7 @@ class Vector:
             return "Unknown"
         else:
             return speaker_id
-    
+
     def __call__(self, audio_data: np.ndarray) -> str:
         self.preprocess(audio_data)
         self.infer()
