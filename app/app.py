@@ -75,6 +75,8 @@ paddle.utils.run_check()
 # utils
 # -----------------------------------------------------------------------------
 
+from pacgoc.utils.format import pcm32to16
+
 
 # Use Ctrl+C to quit the program
 def signal_handler(sig, frame):
@@ -97,11 +99,36 @@ def is_valid_wav(path):
         return False
 
 
+def write_wav(data: np.ndarray, frame_rate: int, file_path: os.PathLike):
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    # pls make sure data is int16
+    data = data.astype(np.int16)
+
+    with wave.open(file_path, "w") as wav_file:
+        n_channels = 1  # single channel
+        sample_width = 2  # int16
+        n_frames = len(data)
+
+        wav_file.setnchannels(n_channels)
+        wav_file.setsampwidth(sample_width)
+        wav_file.setframerate(frame_rate)
+        wav_file.setnframes(n_frames)
+
+        # write data to file
+        wav_file.writeframes(data.tobytes())
+
+
 # -----------------------------------------------------------------------------
 # PacGoc
 # -----------------------------------------------------------------------------
 
+from datetime import datetime
+
 LISTENING = False
+RECORDING = False
+
+LISTENING_ON = "🔴 Listening"
+LISTENING_OFF = "⚪ Listening"
 
 
 def set_interval(interval):
@@ -112,8 +139,9 @@ def set_interval(interval):
 def start_listen():
     global LISTENING
     LISTENING = True
+    _ = source.get_queue_data()  # flush the audio buffer
     print("Listening...")
-    return True
+    return LISTENING_ON
 
 
 def end_listen():
@@ -123,12 +151,29 @@ def end_listen():
         LISTENING = False
         audio_data = source.get_queue_data()
         inference(audio_data)
-    return False
+        # if is recording, save the audio data to file
+        if RECORDING:
+            now = datetime.now()
+            file_name = now.strftime("record-%Y-%m-%d-%H-%M-%S.wav")
+            file_path = os.path.join(config_user.recordings_dir, file_name)
+            if isint16:
+                write_wav(audio_data, SAMPLING_RATE, file_path)
+            else:
+                write_wav(pcm32to16(audio_data), SAMPLING_RATE, file_path)
+    return LISTENING_OFF
 
 
 def get_listen_status():
     global LISTENING
-    return LISTENING
+    if LISTENING:
+        return LISTENING_ON
+    else:
+        return LISTENING_OFF
+
+
+def set_recording(recording):
+    global RECORDING
+    RECORDING = recording
 
 
 # -----------------------------------------------------------------------------
@@ -225,6 +270,8 @@ def get_separation_result():
 # Main Function that Generates Results
 # -----------------------------------------------------------------------------
 
+MAX_INFER_LEN = MAX_AUDIO_LEN * SAMPLING_RATE
+
 
 def inference(audio_data: np.ndarray):
     global cls_on, cls_res
@@ -232,6 +279,8 @@ def inference(audio_data: np.ndarray):
     global verify_on, verify_res
     global asr_on, asr_res
     global separation_on, separation_res, du
+    if len(audio_data) > MAX_INFER_LEN:
+        audio_data = audio_data[:MAX_INFER_LEN]
     # audio classification
     if cls_on:
         cls_res = cls(audio_data)
@@ -406,12 +455,14 @@ with gr.Blocks(css=css) as demo:
             label="Interval (seconds)",
             info="Recognized audio will be updated every interval seconds.",
         )
-        with gr.Row():
+        with gr.Row(equal_height=False):
             start_btn = gr.Button("Start listening", scale=3)
             end_btn = gr.Button("End listening", scale=3)
-            listen_status = gr.Checkbox(
-                value=False,
-                label="Listening",
+            enable_recording = gr.Checkbox(value=False, label="Record Audio", scale=1)
+            listen_status = gr.Textbox(
+                LISTENING_OFF,
+                container=False,
+                show_label=False,
                 interactive=False,
                 scale=1,
             )
@@ -427,6 +478,9 @@ with gr.Blocks(css=css) as demo:
                 outputs=listen_status,
                 show_progress="hidden",
             )
+            enable_recording.change(
+                set_recording, inputs=[enable_recording], outputs=None
+            )
             demo.load(
                 get_listen_status,
                 inputs=None,
@@ -434,14 +488,15 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress="hidden",
             )
-        gr.HTML(
-            f"""
-        <div align="center">
-            <img src=/file={pacgoc_logo} alt="logo" width="150"/>
-        </div>
-        """
-        )
-        interval.change(set_interval, inputs=[interval], outputs=None)
+        with gr.Row(equal_height=False):
+            gr.HTML(
+                f"""
+            <div align="center">
+                <img src=/file={pacgoc_logo} alt="logo" width="150"/>
+            </div>
+            """
+            )
+            interval.change(set_interval, inputs=[interval], outputs=None)
     if config_user.AUDIO_CLASSIFIER_ON:
         with gr.Tab("音频分类"):
             gr.Markdown("## 音频分类")

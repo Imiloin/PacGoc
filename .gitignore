@@ -2,6 +2,7 @@
 /temp/
 /sample/
 /models/
+/recordings/
 .vscode/
 *.code-workspace
 *:Zone.Identifier
