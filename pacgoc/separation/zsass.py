@@ -34,6 +34,7 @@ class SourceSeparation:
     def __init__(
         self,
         sr: int = 16000,
+        query_sr: int = 16000,
         isint16: bool = False,
         ckpt: os.PathLike = None,
         resume_ckpt: os.PathLike = None,
@@ -45,6 +46,7 @@ class SourceSeparation:
         Initialize the source separation model, setups the config and load the saved model.
         """
         self.sr = sr
+        self.query_sr = query_sr
         self.isint16 = isint16
         pl.utilities.seed.seed_everything(seed=12412)  # set the random seed
         self.test_key = ["vocals"]  # ["vocals", "drums", "bass", "other"]
@@ -64,7 +66,7 @@ class SourceSeparation:
             if query_file.endswith(".wav"):
                 temp_q, fs = librosa.load(f_path, sr=None)
                 temp_q = temp_q[:, None]
-                temp_q = prepprocess_audio(temp_q, fs, self.sr, "mix")
+                temp_q = prepprocess_audio(temp_q, fs, self.query_sr, "mix")
                 temp = [temp_q]
                 for _ in self.test_key:
                     temp.append(temp_q)

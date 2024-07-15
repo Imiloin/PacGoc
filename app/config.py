@@ -49,5 +49,6 @@ resume_ckpt = os.path.join(
     current_dir, "..", "models", "zeroshot_separation", "htsat_audioset_2048d.ckpt"
 )
 query_folder = os.path.join(current_dir, "..", "sample", "query")
+query_sr = 16000
 output_dir = os.path.join(current_dir, "..", "sample", "zsass_output")
 output_filename = "pred.wav"

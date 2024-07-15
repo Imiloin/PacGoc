@@ -325,7 +325,8 @@ def inference(audio_data: np.ndarray):
 def gen_result():
     global LISTENING
     # flush the audio buffer
-    _ = source.get_queue_data()
+    if source.get_queue_size():
+        _ = source.get_queue_data()
     while True:
         audio_len = source.get_queue_size()
         print(audio_len)
@@ -380,8 +381,6 @@ else:
     print("Usage: python app.py --source [pcie|speaker|path/to/wav]")
     exit(1)
 
-# Start the audio source
-th_receive.start()
 
 # Initialize the models
 cls = None
@@ -416,6 +415,7 @@ if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
 if config_user.AUDIO_SOURCE_SEPARATION_ON:
     separation = SourceSeparation(
         sr=SAMPLING_RATE,
+        query_sr=config_user.query_sr,
         isint16=isint16,
         ckpt=config_user.ckpt,
         resume_ckpt=config_user.resume_ckpt,
@@ -423,6 +423,9 @@ if config_user.AUDIO_SOURCE_SEPARATION_ON:
         output_path=config_user.output_dir,
         output_filename=config_user.output_filename,
     )
+
+# Start the audio source
+th_receive.start()
 
 # Start the result generator
 th_result = threading.Thread(target=gen_result, daemon=True)
