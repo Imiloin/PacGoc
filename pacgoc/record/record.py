@@ -26,7 +26,7 @@ class Recorder:
         ).recorder(samplerate=self.sr, channels=1) as mic:
             while True:
                 data = mic.record(Recorder.BUFFER_SIZE)
-                data = data.reshape(-1) * self.default_speaker_channels
+                data = data.reshape(-1) * self.default_speaker_channels  ######
                 self.audio_data_queue.put(data)
 
     def get_queue_size(self) -> float:

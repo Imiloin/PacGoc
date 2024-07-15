@@ -30,7 +30,7 @@ class Emotion:
             audio = audio_data
         if self.sr != Emotion.MODEL_SAMPLE_RATE:
             audio = librosa.resample(
-                audio, orig_sr=self.sr, target_sr=Emotion.MODEL_SAMPLE_RATE
+                audio, orig_sr=self.sr, target_sr=Emotion.MODEL_SAMPLE_RATE, scale=True
             )
         return audio
 

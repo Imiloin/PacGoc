@@ -92,7 +92,7 @@ class CLS:
 
         if self.sr != CLS.MODEL_SAMPLE_RATE:
             waveform = librosa.resample(
-                waveform, orig_sr=self.sr, target_sr=CLS.MODEL_SAMPLE_RATE
+                waveform, orig_sr=self.sr, target_sr=CLS.MODEL_SAMPLE_RATE, scale=True
             )
 
         # Feature extraction

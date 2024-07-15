@@ -151,7 +151,7 @@ class Vector:
 
         if self.sr != Vector.MODEL_SAMPLE_RATE:
             waveform = librosa.resample(
-                waveform, orig_sr=self.sr, target_sr=Vector.MODEL_SAMPLE_RATE
+                waveform, orig_sr=self.sr, target_sr=Vector.MODEL_SAMPLE_RATE, scale=True
             )
 
         # stage 2: get the audio feat

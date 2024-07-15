@@ -49,7 +49,7 @@ class AgeGender:
             audio_data = pcm16to32(audio_data)
         # if self.sr != AgeGender.MODEL_SAMPLE_RATE:
         #     audio_data = librosa.resample(
-        #         audio_data, orig_sr=self.sr, target_sr=AgeGender.MODEL_SAMPLE_RATE
+        #         audio_data, orig_sr=self.sr, target_sr=AgeGender.MODEL_SAMPLE_RATE, scale=True
         #     )
         return audio_data
 
