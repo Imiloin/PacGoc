@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def pcm16to32(audio):
+def pcm16to32(audio: np.ndarray[np.int16]) -> np.ndarray[np.float32]:
     """
     Convert PCM 16-bit audio to 32-bit float audio.
     """
@@ -12,7 +12,7 @@ def pcm16to32(audio):
     return audio
 
 
-def pcm32to16(audio):
+def pcm32to16(audio: np.ndarray[np.float32]) -> np.ndarray[np.int16]:
     """
     Convert PCM 32-bit float audio to 16-bit audio.
     """

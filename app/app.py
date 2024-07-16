@@ -230,6 +230,7 @@ def get_verify_result():
     global verify_res
     return [("Speaker: ", None), (verify_res, verify_res)]
 
+
 # -----------------------------------------------------------------------------
 # Spoof Detection
 # -----------------------------------------------------------------------------
@@ -237,9 +238,11 @@ def get_verify_result():
 spoof_on = False
 spoof_res = "bonafide"
 
+
 def spoof_checkbox(enable_spoof):
     global spoof_on
     spoof_on = enable_spoof
+
 
 def get_spoof_result():
     global spoof_res

@@ -23,6 +23,7 @@ from sed_model import SEDWrapper
 import pytorch_lightning as pl
 
 from ..utils import pcm16to32
+from ..utils import trim_start_silence
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -112,7 +113,7 @@ class SourceSeparation:
         self.trainer.test(at_wrapper, test_dataloaders=avg_loader)
         self.avg_at = at_wrapper.avg_at
 
-    def preprocess(self, audio_data: np.ndarray):
+    def preprocess(self, audio_data: np.ndarray) -> np.ndarray:
         """
         Preprocess the audio data by converting it to 32-bit float.
         """
@@ -125,11 +126,14 @@ class SourceSeparation:
             audio = librosa.resample(
                 audio, orig_sr=self.sr, target_sr=SourceSeparation.MODEL_SAMPLE_RATE, scale=True
             )
+        # trim the start silence
+        audio = trim_start_silence(audio, threshold=1e-4)  ####### threshold?
         return audio
 
     def inference(self, audio: np.ndarray):
         """
         Perform source separation on the given audio data.
+        Will generate the separated audio files and save them to the output_path.
         """
         test_tracks = []
         temp = [audio]
