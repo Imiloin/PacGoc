@@ -50,6 +50,7 @@ from pacgoc.cls import CLS
 from pacgoc.profiling import AgeGender
 from pacgoc.profiling import Emotion
 from pacgoc.verification import Vector
+from pacgoc.spoof import SpoofDetector
 from pacgoc.asr import ASR
 from pacgoc.separation import SourceSeparation
 import argparse
@@ -229,6 +230,21 @@ def get_verify_result():
     global verify_res
     return [("Speaker: ", None), (verify_res, verify_res)]
 
+# -----------------------------------------------------------------------------
+# Spoof Detection
+# -----------------------------------------------------------------------------
+
+spoof_on = False
+spoof_res = "bonafide"
+
+def spoof_checkbox(enable_spoof):
+    global spoof_on
+    spoof_on = enable_spoof
+
+def get_spoof_result():
+    global spoof_res
+    return [("Result: ", None), (spoof_res, spoof_res)]
+
 
 # -----------------------------------------------------------------------------
 # Automatic Speech Recognition
@@ -277,8 +293,9 @@ def inference(audio_data: np.ndarray):
     global cls_on, cls_res
     global profile_on, profile_res
     global verify_on, verify_res
+    global spoof_on, spoof_res
     global asr_on, asr_res
-    global separation_on, separation_res, du
+    global separation_on, separation_res
     if len(audio_data) > MAX_INFER_LEN:
         audio_data = audio_data[:MAX_INFER_LEN]
     # audio classification
@@ -307,6 +324,9 @@ def inference(audio_data: np.ndarray):
         print(verify_res)
     else:
         verify_res = "Unknown"
+    if spoof_on:
+        spoof_res = spoof_detector(audio_data)
+        print(spoof_res)
     # automatic speech recognition
     if asr_on:
         res = asr(audio_data)
@@ -405,6 +425,12 @@ if config_user.SPEAKER_VERIFICATION_ON:
         isint16=isint16,
         enroll_embeddings=config_user.enroll_embeddings_json,
         enroll_audio_dir=config_user.enroll_audio_dir,
+    )
+if config_user.SPOOF_DETECTION_ON:
+    spoof_detector = SpoofDetector(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        model_root=config_user.spoof_model_root,
     )
 if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
     asr = ASR(
@@ -542,6 +568,23 @@ with gr.Blocks(css=css) as demo:
                 get_verify_result,
                 inputs=None,
                 outputs=verify_result,
+                every=1,
+                show_progress=False,
+            )
+    if config_user.SPOOF_DETECTION_ON:
+        with gr.Tab("变声检测"):
+            gr.Markdown("## 变声检测")
+            enable_spoof = gr.Checkbox(value=False, label="Enable Spoof Detection")
+            enable_spoof.change(spoof_checkbox, inputs=[enable_spoof], outputs=None)
+            spoof_result = gr.HighlightedText(
+                show_legend=False,
+                show_label=False,
+                color_map={"bonafide": "green", "spoof": "red"},
+            )
+            demo.load(
+                get_spoof_result,
+                inputs=None,
+                outputs=spoof_result,
                 every=1,
                 show_progress=False,
             )

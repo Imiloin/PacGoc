@@ -15,6 +15,7 @@ recordings_dir = os.path.join(current_dir, "..", "recordings")
 AUDIO_CLASSIFIER_ON = True
 SPEAKER_PROFILING_ON = True
 SPEAKER_VERIFICATION_ON = True
+SPOOF_DETECTION_ON = True
 AUTOMATIC_SPEECH_RECOGNITION_ON = True
 AUDIO_SOURCE_SEPARATION_ON = True
 
@@ -31,6 +32,12 @@ age_gender_model_root = os.path.join(current_dir, "..", "models", "age_gender")
 enroll_embeddings_json = os.path.join(current_dir, "..", "sample", "embeddings.json")
 enroll_audio_dir = None
 color_map = {"Unknown": "gray", "A": "green"}
+
+# -----------------------------------------------------------------------------
+# Spoof Detection
+# -----------------------------------------------------------------------------
+
+spoof_model_root = os.path.join(current_dir, "..", "models", "spoof_detection")
 
 # -----------------------------------------------------------------------------
 # Automatic Speech Recognition

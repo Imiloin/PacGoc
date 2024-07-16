@@ -39,7 +39,7 @@ class AgeGender:
 
         self.model = audonnx.load(model_root)
 
-    def preprocess(self, audio_data: np.ndarray):
+    def preprocess(self, audio_data: np.ndarray) -> np.ndarray:
         """
         Preprocess the audio data, convert to float32 and resample to 16000Hz if necessary.
         """
