@@ -14,12 +14,4 @@
 #define PACK_HEADER_SIZE 8  // 包头中的样本数
 #define PACK_DATA_SIZE 128       // 一个数据包中的样本数
 
-#define AUDIO_TIME 30  // in seconds
-#define MAX_PACK_COUNT (AUDIO_TIME * SAMPLE_RATE * CHANNELS / PACK_DATA_SIZE)
-
-#define LINE_NUM 16                    // 打印一个包的行数
-#define LINE_LEN (PACK_DATA_SIZE / LINE_NUM)  // 打印一行的字节数
-
-bool dump_pcm(DMA_OPERATION* dma_oper, FILE* file);
-
 #endif  // AUDIO_H
