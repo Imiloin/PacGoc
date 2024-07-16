@@ -13,9 +13,10 @@ from queue import Queue
 
 class PCIe:
     PACK_HEADER = 0xAAAA  # 包头
-    PACK_START = 8  # 包的数据起始位置
+    PACK_START = 8  # 包头长度（int16 数据个数）
     PACK_TIME = 128 / 48000  # 一个包中音频数据的时长，单位为秒
     INTERVAL = 0.0016  # 循环间隔，<2ms
+    TIK = INTERVAL / 10  # 接收到无效包时的等待时间，单位为秒
 
     def __init__(self):
         self._obj = pcie.PCIE()
@@ -37,6 +38,9 @@ class PCIe:
             audio_data = pack.view(np.uint16)
             if audio_data[0] == PCIe.PACK_HEADER:  # valid pack
                 self.audio_data_queue.put(audio_data[PCIe.PACK_START :])
+            else:  # invalid pack
+                time.sleep(PCIe.TIK)  # 接收到无效包，等待一段时间
+                continue
 
             # for sample in audio_data:
             #     print(f"{sample:04x}", end=" ")
