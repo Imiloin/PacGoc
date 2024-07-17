@@ -15,7 +15,7 @@ class PCIe:
     PACK_HEADER = 0xAAAA  # 包头
     PACK_START = 8  # 包头长度（int16 数据个数）
     PACK_TIME = 128 / 48000  # 一个包中音频数据的时长，单位为秒
-    INTERVAL = 0.0016  # 循环间隔，<2ms
+    INTERVAL = 0.002  # 循环间隔，应 < PACK_TIME - 0.0001
     TIK = INTERVAL / 10  # 接收到无效包时的等待时间，单位为秒
 
     def __init__(self):
