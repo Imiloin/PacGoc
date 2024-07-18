@@ -13,14 +13,14 @@ class Emotion:
         self,
         sr: int = 16000,
         isint16: bool = True,
-        model: os.PathLike = "iic/emotion2vec_plus_base",
+        model_root: os.PathLike = "iic/emotion2vec_plus_large",
     ):
         """
         Initialize the Emotion class.
         """
         self.sr = sr
         self.isint16 = isint16
-        self.model = AutoModel(model=model)
+        self.model = AutoModel(model=model_root)
 
     def preprocess(self, audio_data: np.ndarray):
         if self.isint16:
@@ -46,6 +46,15 @@ class Emotion:
     def postprocess(self, rec_result):
         """
         Return the emotion with the highest score
+        生气/angry
+        厌恶/disgusted
+        恐惧/fearful
+        开心/happy
+        中立/neutral
+        其他/other
+        难过/sad
+        吃惊/surprised
+        <unk>
         """
         idx = rec_result[0]["scores"].index(max(rec_result[0]["scores"]))
         return rec_result[0]["labels"][idx]

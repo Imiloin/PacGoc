@@ -14,14 +14,14 @@ class AgeGender:
         self,
         sr: int = 16000,
         isint16: bool = True,
-        model_root: os.PathLike = None,
+        model_root: os.PathLike = "audeering/wav2vec2-large-robust-24-ft-age-gender",
     ):
         """
-        Initialize AgeGender model, if not exists, download and extract it.
+        Initialize AgeGender model.
         """
         self.sr = sr
         self.isint16 = isint16
-        
+
         self.labels = {"age": 0, "female": 1, "male": 2, "child": 3}
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,7 +58,7 @@ class AgeGender:
         embeddings: bool = False,
     ) -> np.ndarray:
         """
-        Create interface for feature extraction and infer age and gender
+        Run inference on the audio data.
         """
         # run through processor to normalize signal
         # always returns a batch, so we just get the first entry

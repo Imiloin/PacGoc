@@ -421,7 +421,11 @@ if config_user.SPEAKER_PROFILING_ON:
         isint16=isint16,
         model_root=config_user.age_gender_model_root,
     )
-    emotion = Emotion(sr=SAMPLING_RATE, isint16=isint16)
+    emotion = Emotion(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        model_root=config_user.emotion_model_root,
+    )
 if config_user.SPEAKER_VERIFICATION_ON:
     vector = Vector(
         sr=SAMPLING_RATE,

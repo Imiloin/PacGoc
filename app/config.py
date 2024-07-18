@@ -23,7 +23,10 @@ AUDIO_SOURCE_SEPARATION_ON = True
 # Speaker Profiling
 # -----------------------------------------------------------------------------
 
-age_gender_model_root = os.path.join(current_dir, "..", "models", "age_gender")
+age_gender_model_root = os.path.join(
+    current_dir, "..", "models", "wav2vec2-large-robust-24-ft-age-gender"
+)
+emotion_model_root = os.path.join(current_dir, "..", "models", "emotion2vec_plus_large")
 
 # -----------------------------------------------------------------------------
 # Speaker Verification
