@@ -89,9 +89,9 @@ class AgeGender:
         infer_result = infer_result.flatten()
         # ignore child class
         if infer_result[self.labels["female"]] < infer_result[self.labels["male"]]:
-            res["gender"] = "Male"
+            res["gender"] = "男/Male"
         else:
-            res["gender"] = "Female"
+            res["gender"] = "女/Female"
         res["age"] = round(infer_result[self.labels["age"]] * 100)
         return res
 

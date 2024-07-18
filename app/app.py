@@ -200,11 +200,11 @@ def get_cls_result():
 # -----------------------------------------------------------------------------
 
 profile_on = False
-profile_res = []
+profile_res = {"result": [], "emojis": "😸"}
 
 
-def get_age_emoji(age, gender="Male"):
-    if gender == "Male":
+def get_genderage_emoji(age: int, gender: str) -> str:
+    if gender == "男/Male":
         if age < 13:
             return "👶"
         elif age < 28:
@@ -215,7 +215,7 @@ def get_age_emoji(age, gender="Male"):
             return "🧔"
         else:
             return "👴"
-    elif gender == "Female":
+    elif gender == "女/Female":
         if age < 13:
             return "👶"
         elif age < 28:
@@ -231,7 +231,6 @@ def get_age_emoji(age, gender="Male"):
         return "🧑‍🦲"
 
 
-gender_dict = {"Male": "🚹", "Female": "🚺", "Unknown": "⚧️"}
 emotion_dict = {
     "中立/neutral": "😐",
     "开心/happy": "😄",
@@ -245,23 +244,22 @@ emotion_dict = {
 }
 
 
-def add_emojis(agegender_res, emotion_res):
+def process_profile_result(agegender_res, emotion_res):
     gender = agegender_res["gender"]
-    gender_emoji = gender_dict[gender]
 
     age = agegender_res["age"]
-    age_emoji = get_age_emoji(age, gender)
+    genderage_emoji = get_genderage_emoji(age, gender)
 
     emotion = emotion_res
     emotion_emoji = emotion_dict[emotion]
 
-    profile_res = [
-        (
-            gender + " " + gender_emoji,
-            str(age) + " " + age_emoji,
-            emotion + " " + emotion_emoji,
-        ),
+    model_output = [
+        (gender, str(age), emotion),
     ]
+    emojis = genderage_emoji + " " + emotion_emoji
+
+    profile_res = {"result": model_output, "emojis": emojis}
+
     return profile_res
 
 
@@ -272,7 +270,12 @@ def profile_checkbox(enable_profile):
 
 def get_profile_result():
     global profile_res
-    return pd.DataFrame(profile_res, columns=["Gender", "Age", "Emotion"])
+    return pd.DataFrame(profile_res["result"], columns=["Gender", "Age", "Emotion"])
+
+
+def get_profile_emojis():
+    global profile_res
+    return profile_res["emojis"]
 
 
 # -----------------------------------------------------------------------------
@@ -373,8 +376,8 @@ def inference(audio_data: np.ndarray):
     if profile_on:
         agegender_res = age_gender(audio_data)
         emotion_res = emotion(audio_data)
-        profile_res = add_emojis(agegender_res, emotion_res)
-        print(profile_res)
+        profile_res = process_profile_result(agegender_res, emotion_res)
+        print(profile_res["result"])
     else:
         profile_res = []
     # speaker verification
@@ -527,10 +530,16 @@ th_result.start()
 
 assets_dir = os.path.join(current_dir, "assets")
 pacgoc_logo = os.path.join(assets_dir, "pacgoc.svg")
+
 # remove loading orange border
+# and add centering large elem_id
 css = """
 .generating {
     border: none;
+}
+#large span{
+    font-size: 4em;
+    text-align: center;
 }
 """
 
@@ -672,6 +681,15 @@ with gr.Blocks(css=css) as demo:
                     get_listen_status,
                     inputs=None,
                     outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
+            with gr.Row(equal_height=False):
+                profile_emojis = gr.Markdown("😸", elem_id="large")
+                demo.load(
+                    get_profile_emojis,
+                    inputs=None,
+                    outputs=profile_emojis,
                     every=1,
                     show_progress="hidden",
                 )
