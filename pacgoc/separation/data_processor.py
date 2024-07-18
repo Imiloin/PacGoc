@@ -3,7 +3,7 @@ import logging
 import os
 import h5py
 import random
-from utils import int16_to_float32
+from .utils import int16_to_float32
 
 from torch.utils.data import Dataset
 

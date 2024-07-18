@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.distributed as dist
 import pytorch_lightning as pl
-from htsat_utils import get_mix_lambda, get_loss_func, d_prime
+from .htsat_utils import get_mix_lambda, get_loss_func, d_prime
 
 
 class SEDWrapper(pl.LightningModule):

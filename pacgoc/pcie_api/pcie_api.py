@@ -1,11 +1,4 @@
-import sys
-from pathlib import Path
-
-# add current directory to sys.path to import pcie module
-current_dir = Path(__file__).parent
-sys.path.append(str(current_dir))
-
-import pcie
+from . import pcie
 import time
 import numpy as np
 from queue import Queue

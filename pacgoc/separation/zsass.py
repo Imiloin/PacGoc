@@ -1,25 +1,18 @@
 import os
-import sys
-from pathlib import Path
-
-# add current directory to sys.path to import pcie module
-current_dir = Path(__file__).parent
-sys.path.append(str(current_dir))
-
 import librosa
 import numpy as np
 
 import torch
 from torch.utils.data import DataLoader
-from utils import create_folder, prepprocess_audio
-from models.asp_model import ZeroShotASP, AutoTaggingWarpper
-from models.separator import SeparatorModel
-from data_processor import MusdbDataset
+from .utils import create_folder, prepprocess_audio
+from .models.asp_model import ZeroShotASP, AutoTaggingWarpper
+from .models.separator import SeparatorModel
+from .data_processor import MusdbDataset
 
-import asp_config
-import htsat_config
-from models.htsat import HTSAT_Swin_Transformer
-from sed_model import SEDWrapper
+from . import asp_config
+from . import htsat_config
+from .models.htsat import HTSAT_Swin_Transformer
+from .sed_model import SEDWrapper
 import pytorch_lightning as pl
 
 from ..utils import pcm16to32

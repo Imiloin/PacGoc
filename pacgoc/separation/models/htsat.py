@@ -23,7 +23,7 @@ from torchlibrosa.augmentation import SpecAugmentation
 from itertools import repeat
 from typing import List
 from .layers import PatchEmbed, Mlp, DropPath, trunc_normal_, to_2tuple
-from htsat_utils import do_mixup, interpolate
+from ..htsat_utils import do_mixup, interpolate
 
 
 # below codes are based and referred from https://github.com/microsoft/Swin-Transformer
