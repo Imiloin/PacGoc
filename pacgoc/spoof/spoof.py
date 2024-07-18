@@ -24,6 +24,10 @@ class SpoofDetector:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.id2label = {"0": "bonafide", "1": "spoof"}
+        
+        if not os.path.exists(model_root):
+            print(f"Model root {model_root} does not exist.")
+            exit(1)
 
         # get feature extractor from pre-trained model
         model_id = os.path.join(model_root, "pre-trained")

@@ -1,15 +1,14 @@
 import os
-import audeer
-import audonnx
-import audinterface
+import torch
 import librosa
 import numpy as np
+from transformers import Wav2Vec2Processor
+from .model import AgeGenderModel
 from ...utils import pcm16to32
 
 
 class AgeGender:
     MODEL_SAMPLE_RATE = 16000
-    url = "https://zenodo.org/record/7761387/files/w2v2-L-robust-6-age-gender.25c844af-1.1.1.zip"
 
     def __init__(
         self,
@@ -22,22 +21,18 @@ class AgeGender:
         """
         self.sr = sr
         self.isint16 = isint16
+        
+        self.labels = {"age": 0, "female": 1, "male": 2, "child": 3}
 
-        # if model is not specified, download and extract model
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         if not os.path.exists(model_root):
-            print("Downloading and extracting AgeGender model...")
-            model_root = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "model"
-            )
-            cache_root = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), "cache"
-            )
-            audeer.mkdir(cache_root)
-            dst_path = os.path.join(cache_root, "model.zip")
-            audeer.download_url(AgeGender.url, dst_path, verbose=True)
-            audeer.extract_archive(dst_path, model_root, verbose=True)
+            print(f"Model root {model_root} does not exist.")
+            exit(1)
 
-        self.model = audonnx.load(model_root)
+        self.processor = Wav2Vec2Processor.from_pretrained(model_root)
+        self.model = AgeGenderModel.from_pretrained(model_root)
+        self.model = self.model.to(self.device)
 
     def preprocess(self, audio_data: np.ndarray) -> np.ndarray:
         """
@@ -47,41 +42,57 @@ class AgeGender:
             audio_data = audio_data.view(dtype=np.int16)
             # convert to float32
             audio_data = pcm16to32(audio_data)
-        # if self.sr != AgeGender.MODEL_SAMPLE_RATE:
-        #     audio_data = librosa.resample(
-        #         audio_data, orig_sr=self.sr, target_sr=AgeGender.MODEL_SAMPLE_RATE, scale=True
-        #     )
+        if self.sr != AgeGender.MODEL_SAMPLE_RATE:
+            # resample to 16000Hz
+            audio_data = librosa.resample(
+                audio_data,
+                orig_sr=self.sr,
+                target_sr=AgeGender.MODEL_SAMPLE_RATE,
+                scale=True,
+            )
         return audio_data
 
-    def infer(self, audio_data: np.ndarray[np.float32]):
+    def infer(
+        self,
+        audio_data: np.ndarray[np.float32],
+        embeddings: bool = False,
+    ) -> np.ndarray:
         """
         Create interface for feature extraction and infer age and gender
         """
-        outputs = ["logits_age", "logits_gender"]
-        self.interface = audinterface.Feature(
-            self.model.labels(outputs),
-            process_func=self.model,
-            process_func_args={
-                "outputs": outputs,
-                "concat": True,
-            },
-            sampling_rate=self.sr,
-            resample=True,  # auto resample
-            verbose=True,
-        )
-        return self.interface.process_signal(audio_data, self.sr)
+        # run through processor to normalize signal
+        # always returns a batch, so we just get the first entry
+        # then we put it on the device
+        y = self.processor(audio_data, sampling_rate=AgeGender.MODEL_SAMPLE_RATE)
+        y = y["input_values"][0]
+        y = y.reshape(1, -1)
+        y = torch.from_numpy(y).to(self.device)
 
-    def postprocess(self, infer_result) -> dict:
+        # run through model
+        with torch.no_grad():
+            y = self.model(y)
+            if embeddings:
+                y = y[0]
+            else:
+                y = torch.hstack([y[1], y[2]])
+
+        # convert to numpy
+        y = y.detach().cpu().numpy()
+
+        return y
+
+    def postprocess(self, infer_result: np.ndarray) -> dict:
         """
         Postprocess the inference result, return a dictionary with age and gender.
         """
         res = {}
+        infer_result = infer_result.flatten()
         # ignore child class
-        if infer_result["female"].iloc[0] < infer_result["male"].iloc[0]:
+        if infer_result[self.labels["female"]] < infer_result[self.labels["male"]]:
             res["gender"] = "男/Male"
         else:
             res["gender"] = "女/Female"
-        res["age"] = round(infer_result["age"].iloc[0] * 100)
+        res["age"] = round(infer_result[self.labels["age"]] * 100)
         return res
 
     def __call__(self, audio_data: np.ndarray) -> dict:
