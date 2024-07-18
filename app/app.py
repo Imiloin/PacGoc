@@ -203,6 +203,68 @@ profile_on = False
 profile_res = []
 
 
+def get_age_emoji(age, gender="Male"):
+    if gender == "Male":
+        if age < 13:
+            return "👶"
+        elif age < 28:
+            return "👦"
+        elif age < 50:
+            return "🧑"
+        elif age < 70:
+            return "🧔"
+        else:
+            return "👴"
+    elif gender == "Female":
+        if age < 13:
+            return "👶"
+        elif age < 28:
+            return "👧"
+        elif age < 50:
+            return "👩"
+        elif age < 70:
+            return "👱"
+        else:
+            return "👵"
+    else:
+        print("Unknown gender", str(gender))
+        return "🧑‍🦲"
+
+
+gender_dict = {"Male": "🚹", "Female": "🚺", "Unknown": "⚧️"}
+emotion_dict = {
+    "中立/neutral": "😐",
+    "开心/happy": "😄",
+    "生气/angry": "😠",
+    "厌恶/disgusted": "😒",
+    "恐惧/fearful": "😱",
+    "难过/sad": "😔",
+    "吃惊/surprised": "😲",
+    "其他/other": "🤔",
+    "<unk>": "😶",
+}
+
+
+def add_emojis(agegender_res, emotion_res):
+    gender = agegender_res["gender"]
+    gender_emoji = gender_dict[gender]
+
+    age = agegender_res["age"]
+    age_emoji = get_age_emoji(age, gender)
+
+    emotion = emotion_res
+    emotion_emoji = emotion_dict[emotion]
+
+    profile_res = [
+        (
+            gender + " " + gender_emoji,
+            str(age) + " " + age_emoji,
+            emotion + " " + emotion_emoji,
+        ),
+    ]
+    return profile_res
+
+
 def profile_checkbox(enable_profile):
     global profile_on
     profile_on = enable_profile
@@ -311,13 +373,7 @@ def inference(audio_data: np.ndarray):
     if profile_on:
         agegender_res = age_gender(audio_data)
         emotion_res = emotion(audio_data)
-        profile_res = [
-            (
-                agegender_res["gender"],
-                agegender_res["age"],
-                emotion_res,
-            ),
-        ]
+        profile_res = add_emojis(agegender_res, emotion_res)
         print(profile_res)
     else:
         profile_res = []
