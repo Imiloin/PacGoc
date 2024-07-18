@@ -488,7 +488,9 @@ with gr.Blocks(css=css) as demo:
         with gr.Row(equal_height=False):
             start_btn = gr.Button("Start listening", scale=3)
             end_btn = gr.Button("End listening", scale=3)
-            enable_recording = gr.Checkbox(value=False, label="Record Audio", scale=1)
+            enable_recording = gr.Checkbox(
+                value=False, label="Record Audio", scale=1, every=1
+            )
             listen_status = gr.Textbox(
                 LISTENING_OFF,
                 container=False,
@@ -540,6 +542,35 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress=False,
             )
+            with gr.Row(equal_height=False):
+                start_btn = gr.Button("Start listening", scale=3.5)
+                end_btn = gr.Button("End listening", scale=3.5)
+                listen_status = gr.Textbox(
+                    LISTENING_OFF,
+                    container=False,
+                    show_label=False,
+                    interactive=False,
+                    scale=1,
+                )
+                start_btn.click(
+                    start_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                end_btn.click(
+                    end_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                demo.load(
+                    get_listen_status,
+                    inputs=None,
+                    outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
     if config_user.SPEAKER_PROFILING_ON:
         with gr.Tab("音频人物画像"):
             gr.Markdown("## 音频人物画像")
@@ -555,6 +586,35 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress=False,
             )
+            with gr.Row(equal_height=False):
+                start_btn = gr.Button("Start listening", scale=3.5)
+                end_btn = gr.Button("End listening", scale=3.5)
+                listen_status = gr.Textbox(
+                    LISTENING_OFF,
+                    container=False,
+                    show_label=False,
+                    interactive=False,
+                    scale=1,
+                )
+                start_btn.click(
+                    start_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                end_btn.click(
+                    end_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                demo.load(
+                    get_listen_status,
+                    inputs=None,
+                    outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
     if config_user.SPEAKER_VERIFICATION_ON:
         with gr.Tab("声纹识别"):
             gr.Markdown("## 声纹识别")
@@ -574,6 +634,35 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress=False,
             )
+            with gr.Row(equal_height=False):
+                start_btn = gr.Button("Start listening", scale=3.5)
+                end_btn = gr.Button("End listening", scale=3.5)
+                listen_status = gr.Textbox(
+                    LISTENING_OFF,
+                    container=False,
+                    show_label=False,
+                    interactive=False,
+                    scale=1,
+                )
+                start_btn.click(
+                    start_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                end_btn.click(
+                    end_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                demo.load(
+                    get_listen_status,
+                    inputs=None,
+                    outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
     if config_user.SPOOF_DETECTION_ON:
         with gr.Tab("变声检测"):
             gr.Markdown("## 变声检测")
@@ -591,6 +680,35 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress=False,
             )
+            with gr.Row(equal_height=False):
+                start_btn = gr.Button("Start listening", scale=3.5)
+                end_btn = gr.Button("End listening", scale=3.5)
+                listen_status = gr.Textbox(
+                    LISTENING_OFF,
+                    container=False,
+                    show_label=False,
+                    interactive=False,
+                    scale=1,
+                )
+                start_btn.click(
+                    start_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                end_btn.click(
+                    end_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                demo.load(
+                    get_listen_status,
+                    inputs=None,
+                    outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
     if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
         with gr.Tab("自动语音识别"):
             gr.Markdown("## 自动语音识别")
@@ -608,6 +726,35 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress=False,
             )
+            with gr.Row(equal_height=False):
+                start_btn = gr.Button("Start listening", scale=3.5)
+                end_btn = gr.Button("End listening", scale=3.5)
+                listen_status = gr.Textbox(
+                    LISTENING_OFF,
+                    container=False,
+                    show_label=False,
+                    interactive=False,
+                    scale=1,
+                )
+                start_btn.click(
+                    start_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                end_btn.click(
+                    end_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                demo.load(
+                    get_listen_status,
+                    inputs=None,
+                    outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
     if config_user.AUDIO_SOURCE_SEPARATION_ON:
         with gr.Tab("音乐人声分离"):
             gr.Markdown("## 音乐人声分离")
@@ -629,5 +776,34 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress=False,
             )
+            with gr.Row(equal_height=False):
+                start_btn = gr.Button("Start listening", scale=3.5)
+                end_btn = gr.Button("End listening", scale=3.5)
+                listen_status = gr.Textbox(
+                    LISTENING_OFF,
+                    container=False,
+                    show_label=False,
+                    interactive=False,
+                    scale=1,
+                )
+                start_btn.click(
+                    start_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                end_btn.click(
+                    end_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                demo.load(
+                    get_listen_status,
+                    inputs=None,
+                    outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
 
 demo.launch(allowed_paths=[assets_dir])
