@@ -200,7 +200,8 @@ def get_cls_result():
 # -----------------------------------------------------------------------------
 
 profile_on = False
-profile_res = {"result": [], "emojis": "😸"}
+default_profile_res = {"result": [], "emojis": "😸"}
+profile_res = default_profile_res
 
 
 def get_genderage_emoji(age: int, gender: str) -> str:
@@ -379,7 +380,7 @@ def inference(audio_data: np.ndarray):
         profile_res = process_profile_result(agegender_res, emotion_res)
         print(profile_res["result"])
     else:
-        profile_res = []
+        profile_res = default_profile_res
     # speaker verification
     if verify_on:
         verify_res = vector(audio_data)
@@ -884,4 +885,13 @@ with gr.Blocks(css=css) as demo:
                     show_progress="hidden",
                 )
 
-demo.launch(allowed_paths=[assets_dir])
+
+def share_auth(username, password):
+    return username == config_user.username and password == config_user.password
+
+
+# launch webui
+if config_user.share:
+    demo.launch(allowed_paths=[assets_dir], share=True, auth=share_auth)
+else:
+    demo.launch(allowed_paths=[assets_dir])
