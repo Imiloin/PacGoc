@@ -803,6 +803,7 @@ with gr.Blocks(css=css) as demo:
             enable_asr.change(asr_checkbox, inputs=[enable_asr], outputs=None)
             asr_result = gr.TextArea(
                 every=1,
+                max_lines=10,
             )
             demo.load(
                 get_asr_result,
