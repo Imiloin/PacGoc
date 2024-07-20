@@ -23,8 +23,14 @@ class ASR:
         """
         self.sr = sr
         self.isint16 = isint16
+
+        if not os.path.exists(model_root):
+            print(f"Model root {model_root} does not exist.")
+            exit(1)
+
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.model = AutoModel(model=model_root, device=device)
+
         self.lang = lang  # "zn", "en", "yue", "ja", "ko", "nospeech"
         self.cache = {}
 

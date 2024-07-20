@@ -20,6 +20,11 @@ class Emotion:
         """
         self.sr = sr
         self.isint16 = isint16
+
+        if not os.path.exists(model_root):
+            print(f"Model root {model_root} does not exist.")
+            exit(1)
+
         self.model = AutoModel(model=model_root)
 
     def preprocess(self, audio_data: np.ndarray):
