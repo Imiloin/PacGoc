@@ -54,7 +54,7 @@ spoof_model_root = os.path.join(current_dir, "..", "models", "spoof_detection")
 # Automatic Speech Recognition
 # -----------------------------------------------------------------------------
 
-asr_model_type = "medium"
+asr_model_root = os.path.join(current_dir, "..", "models", "SenseVoiceSmall")
 
 # -----------------------------------------------------------------------------
 # Audio Source Separation

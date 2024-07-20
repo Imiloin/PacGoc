@@ -53,6 +53,7 @@ from pacgoc.verification import Vector
 from pacgoc.spoof import SpoofDetector
 from pacgoc.asr import ASR
 from pacgoc.separation import SourceSeparation
+
 import argparse
 import pandas as pd
 import gradio as gr
@@ -139,8 +140,13 @@ def set_interval(interval):
 
 def start_listen():
     global LISTENING
+    global asr, asr_res
     LISTENING = True
     _ = source.get_queue_data()  # flush the audio buffer
+    if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
+        # clear asr cache
+        asr.clear_cache()
+        asr_res = asr_res + "\n"
     print("Listening...")
     return LISTENING_ON
 
@@ -503,7 +509,7 @@ if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
     asr = ASR(
         sr=SAMPLING_RATE,
         isint16=isint16,
-        model=config_user.asr_model_type,
+        model_root=config_user.asr_model_root,
     )
 if config_user.AUDIO_SOURCE_SEPARATION_ON:
     separation = SourceSeparation(
