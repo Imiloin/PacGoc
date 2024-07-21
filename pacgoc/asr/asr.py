@@ -10,6 +10,7 @@ from ..utils import pcm16to32
 
 class ASR:
     MODEL_SAMPLE_RATE = 16000
+    CHUNK_SIZE = 512
 
     def __init__(
         self,
@@ -32,10 +33,11 @@ class ASR:
         self.model = AutoModel(model=model_root, device=device)
 
         self.lang = lang  # "zn", "en", "yue", "ja", "ko", "nospeech"
-        self.cache = {}
+        self.clear_cache()
 
     def clear_cache(self):
         self.cache = {}
+        self.prev_chunk = np.empty(ASR.CHUNK_SIZE)
 
     def preprocess(self, audio_data: np.ndarray):
         """
@@ -50,6 +52,8 @@ class ASR:
             audio = librosa.resample(
                 audio, orig_sr=self.sr, target_sr=ASR.MODEL_SAMPLE_RATE, scale=True
             )
+        # add previous chunk to the current audio
+        audio = np.concatenate([self.prev_chunk, audio])
         return audio
 
     def infer(self, audio: np.ndarray) -> list | Any:
@@ -63,6 +67,7 @@ class ASR:
             use_itn=True,
             # batch_size=64,
         )
+        self.prev_chunk = audio[-ASR.CHUNK_SIZE:]
         return res
 
     def postprocess(self, res: list | Any) -> str:
