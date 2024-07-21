@@ -344,12 +344,18 @@ def get_asr_result():
 # -----------------------------------------------------------------------------
 
 separation_on = False
+separation_mixture = du
 separation_res = du
 
 
 def separation_checkbox(enable_separation):
     global separation_on
     separation_on = enable_separation
+
+
+def get_separation_mixture():
+    global separation_mixture
+    return separation_mixture
 
 
 def get_separation_result():
@@ -370,7 +376,7 @@ def inference(audio_data: np.ndarray):
     global verify_on, verify_res
     global spoof_on, spoof_res
     global asr_on, asr_res
-    global separation_on, separation_res
+    global separation_on, separation_mixture, separation_res
     if len(audio_data) > MAX_INFER_LEN:
         audio_data = audio_data[:MAX_INFER_LEN]
     # audio classification
@@ -406,6 +412,7 @@ def inference(audio_data: np.ndarray):
     # audio source separation
     if separation_on:
         separation(audio_data)
+        separation_mixture = os.path.join(config_user.output_dir, "mixture.wav")
         separation_res = os.path.join(
             config_user.output_dir, config_user.output_filename
         )
@@ -850,10 +857,22 @@ with gr.Blocks(css=css) as demo:
             enable_separation.change(
                 separation_checkbox, inputs=[enable_separation], outputs=None
             )
+            separation_mixture = gr.Audio(
+                label="mixture",
+                type="filepath",
+                every=1,
+            )
             separation_result = gr.Audio(
                 label="vocal",
                 type="filepath",
                 every=1,
+            )
+            demo.load(
+                get_separation_mixture,
+                inputs=None,
+                outputs=separation_mixture,
+                every=1,
+                show_progress=False,
             )
             demo.load(
                 get_separation_result,

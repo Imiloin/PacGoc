@@ -234,7 +234,8 @@ class SeparatorModel(pl.LightningModule):
                     preds[dickey] = np.concatenate(preds[dickey], axis=0)
         # output waveform
         if self.output_wav:
-            filename = str(batch_idx) + "_mixture.wav"
+            # filename = str(batch_idx) + "_mixture.wav"
+            filename = "mixture.wav"
             sf.write(
                 os.path.join(self.config.wave_output_path, filename),
                 batch[0],
