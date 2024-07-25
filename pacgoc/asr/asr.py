@@ -75,7 +75,7 @@ class ASR:
         Extract the text from the decoding result.
         """
         text = rich_transcription_postprocess(res[0]["text"])
-        text = text[:-2]  # remove the last two characters "。<emo>"
+        text = text[:-1]  # remove the last two characters "。<emo>"
         return text
 
     def __call__(self, audio_data: np.ndarray) -> str:
