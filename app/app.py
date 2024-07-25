@@ -503,6 +503,7 @@ if config_user.SPEAKER_VERIFICATION_ON:
     vector = Vector(
         sr=SAMPLING_RATE,
         isint16=isint16,
+        threshold=0.6,  # threshold for verification
         enroll_embeddings=config_user.enroll_embeddings_json,
         enroll_audio_dir=config_user.enroll_audio_dir,
     )
