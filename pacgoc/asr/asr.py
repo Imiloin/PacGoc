@@ -67,7 +67,7 @@ class ASR:
             use_itn=True,
             # batch_size=64,
         )
-        self.prev_chunk = audio[-ASR.CHUNK_SIZE:]
+        self.prev_chunk = audio[-ASR.CHUNK_SIZE :]
         return res
 
     def postprocess(self, res: list | Any) -> str:
@@ -75,7 +75,8 @@ class ASR:
         Extract the text from the decoding result.
         """
         text = rich_transcription_postprocess(res[0]["text"])
-        text = text[:-1]  # remove the last two characters "。<emo>"
+        if len(text) > 2:
+            text = text[:-1]  # remove the last two characters "。<emo>"
         return text
 
     def __call__(self, audio_data: np.ndarray) -> str:
