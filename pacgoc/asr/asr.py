@@ -37,7 +37,7 @@ class ASR:
 
     def clear_cache(self):
         self.cache = {}
-        self.prev_chunk = np.empty(ASR.CHUNK_SIZE)
+        self.prev_chunk = np.zeros(ASR.CHUNK_SIZE)
 
     def preprocess(self, audio_data: np.ndarray):
         """
@@ -53,7 +53,7 @@ class ASR:
                 audio, orig_sr=self.sr, target_sr=ASR.MODEL_SAMPLE_RATE, scale=True
             )
         # add previous chunk to the current audio
-        audio = np.concatenate([self.prev_chunk, audio])
+        audio = np.concatenate((self.prev_chunk, audio))
         return audio
 
     def infer(self, audio: np.ndarray) -> list | Any:
@@ -65,9 +65,12 @@ class ASR:
             cache=self.cache,
             language=self.lang,
             use_itn=True,
+            ban_emo_unk=True,
             # batch_size=64,
         )
         self.prev_chunk = audio[-ASR.CHUNK_SIZE :]
+        # print("res: ")
+        # print(res)
         return res
 
     def postprocess(self, res: list | Any) -> str:
@@ -75,8 +78,8 @@ class ASR:
         Extract the text from the decoding result.
         """
         text = rich_transcription_postprocess(res[0]["text"])
-        if len(text) > 2:
-            text = text[:-1]  # remove the last two characters "。<emo>"
+        if len(text) > 1:
+            text = text[:-1]  # remove the last emoji "<emo>"
         return text
 
     def __call__(self, audio_data: np.ndarray) -> str:

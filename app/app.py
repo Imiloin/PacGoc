@@ -371,6 +371,7 @@ MAX_INFER_LEN = MAX_AUDIO_LEN * SAMPLING_RATE
 
 
 def inference(audio_data: np.ndarray):
+    global LISTENING
     global cls_on, cls_res
     global profile_on, profile_res
     global verify_on, verify_res
@@ -405,6 +406,8 @@ def inference(audio_data: np.ndarray):
     # automatic speech recognition
     if asr_on:
         res = asr(audio_data)
+        if not LISTENING and len(res) > 1:
+            res = res[:-1]  # remove the last punctuation
         print(res)
         asr_res = asr_res + "\n" + res
     else:
