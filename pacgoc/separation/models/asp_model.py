@@ -249,6 +249,8 @@ class ZeroShotASP(pl.LightningModule):
         self.after_conv2 = nn.Conv2d(in_channels=32, out_channels=channels, 
             kernel_size=(1, 1), stride=(1, 1), padding=(0, 0), bias=True)
 
+        self.test_step_outputs = []
+
         self.init_weights()
 
     def init_weights(self):
@@ -508,10 +510,13 @@ class ZeroShotASP(pl.LightningModule):
         self.log("silence_sdr", silence_sdr, on_epoch = True, prog_bar=True, sync_dist=True)
         
     def test_step(self, batch, batch_idx):
-        return self.validation_step(batch, batch_idx)
+        loss = self.validation_step(batch, batch_idx)
+        self.test_step_outputs.append(loss)
+        return loss
 
-    def test_epoch_end(self, test_step_outputs):
-        self.validation_epoch_end(test_step_outputs)             
+    def on_test_epoch_end(self):
+        self.validation_epoch_end(self.test_step_outputs)   
+        self.test_step_outputs.clear()  # free memory          
 
 
 # Latent Embedding Processor
@@ -525,6 +530,7 @@ class AutoTaggingWarpper(pl.LightningModule):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.opt_thres = pickle.load(open(os.path.join(current_dir, 'opt_thres.pkl'),  'rb'))
         self.avg_at = None
+        self.test_step_outputs = []
 
     def test_step(self, batch, batch_idx):
         '''
@@ -564,17 +570,19 @@ class AutoTaggingWarpper(pl.LightningModule):
             at_sources[dickey] = np.concatenate(at_sources[dickey], axis = 0)
         for dickey in self.target_keys:
             at_sources[dickey] = np.mean(at_sources[dickey], axis = 0)
+        self.test_step_outputs.append(at_sources)
         return at_sources
 
-    def test_epoch_end(self, test_step_outputs):
+    def on_test_epoch_end(self):
         avg_at = {}
         for dickey in self.target_keys:
             avg_at[dickey] = []
-            for d in test_step_outputs:
+            for d in self.test_step_outputs:
                 avg_at[dickey].append(d[dickey])
             avg_at[dickey] = np.array(avg_at[dickey])
             print(avg_at[dickey].shape)
             avg_at[dickey] = np.mean(avg_at[dickey], axis = 0)
             print(avg_at[dickey].shape)
         self.avg_at = avg_at
+        self.test_step_outputs.clear()  # free memory
     

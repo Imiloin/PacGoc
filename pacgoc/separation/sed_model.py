@@ -22,6 +22,7 @@ class SEDWrapper(pl.LightningModule):
         self.config = config
         self.dataset = dataset
         self.loss_func = get_loss_func(config.loss_type)
+        self.test_step_outputs = []
 
     def evaluate_metric(self, pred, ans):
         ap = []
@@ -123,22 +124,24 @@ class SEDWrapper(pl.LightningModule):
         preds = torch.cat(preds, dim=0)
         pred = preds.mean(dim = 0)
         if self.config.fl_local:
-            return [
+            loss = [
                 pred.detach().cpu().numpy(), 
                 pred_map.detach().cpu().numpy(),
                 batch["audio_name"],
                 batch["real_len"].cpu().numpy()
             ]
         else:
-            return [pred.detach(), batch["target"].detach()]
+            loss = [pred.detach(), batch["target"].detach()]
+        self.test_step_outputs.append(loss)
+        return loss
 
-    def test_epoch_end(self, test_step_outputs):
+    def on_test_epoch_end(self):
         self.device_type = next(self.parameters()).device
         if self.config.fl_local:
-            pred = np.concatenate([d[0] for d in test_step_outputs], axis = 0)
-            pred_map = np.concatenate([d[1] for d in test_step_outputs], axis = 0)
-            audio_name = np.concatenate([d[2] for d in test_step_outputs], axis = 0)
-            real_len = np.concatenate([d[3] for d in test_step_outputs], axis = 0)
+            pred = np.concatenate([d[0] for d in self.test_step_outputs], axis = 0)
+            pred_map = np.concatenate([d[1] for d in self.test_step_outputs], axis = 0)
+            audio_name = np.concatenate([d[2] for d in self.test_step_outputs], axis = 0)
+            real_len = np.concatenate([d[3] for d in self.test_step_outputs], axis = 0)
             heatmap_file = os.path.join(self.config.heatmap_dir, self.config.test_file + "_" + str(self.device_type) + ".npy")
             save_npy = [
                 {
@@ -152,8 +155,8 @@ class SEDWrapper(pl.LightningModule):
             np.save(heatmap_file, save_npy)
         else:
             self.device_type = next(self.parameters()).device
-            pred = torch.cat([d[0] for d in test_step_outputs], dim = 0)
-            target = torch.cat([d[1] for d in test_step_outputs], dim = 0)
+            pred = torch.cat([d[0] for d in self.test_step_outputs], dim = 0)
+            target = torch.cat([d[1] for d in self.test_step_outputs], dim = 0)
             gather_pred = [torch.zeros_like(pred) for _ in range(dist.get_world_size())]
             gather_target = [torch.zeros_like(target) for _ in range(dist.get_world_size())]
             dist.barrier()
@@ -183,6 +186,7 @@ class SEDWrapper(pl.LightningModule):
             else:
                 self.log("acc", metric_dict["acc"] * float(dist.get_world_size()), on_epoch = True, prog_bar=True, sync_dist=True)
             dist.barrier()
+        self.test_step_outputs.clear()  # free memory
     
 
     def configure_optimizers(self):
@@ -211,132 +215,3 @@ class SEDWrapper(pl.LightningModule):
         )
         
         return [optimizer], [scheduler]
-
-
-
-class Ensemble_SEDWrapper(pl.LightningModule):
-    def __init__(self, sed_models, config, dataset):
-        super().__init__()
-
-        self.sed_models = nn.ModuleList(sed_models)
-        self.config = config
-        self.dataset = dataset
-
-    def evaluate_metric(self, pred, ans):
-        if self.config.dataset_type == "audioset":
-            mAP = np.mean(average_precision_score(ans, pred, average = None))
-            mAUC = np.mean(roc_auc_score(ans, pred, average = None))
-            dprime = d_prime(mAUC)
-            return {"mAP": mAP, "mAUC": mAUC, "dprime": dprime}
-        else:
-            acc = accuracy_score(ans, np.argmax(pred, 1))
-            return {"acc": acc}
-        
-    def forward(self, x, sed_index, mix_lambda = None):
-        self.sed_models[sed_index].eval()
-        preds = [] 
-        pred_maps = []
-        # cancel the time shifting optimization because to speed up
-        shift_num = 1 
-        for i in range(shift_num):
-            pred, pred_map = self.sed_models[sed_index](x)
-            pred_maps.append(pred_map.unsqueeze(0))
-            preds.append(pred.unsqueeze(0))
-            x = self.time_shifting(x, shift_len = 100 * (i + 1))
-        preds = torch.cat(preds, dim=0)
-        pred_maps = torch.cat(pred_maps, dim = 0)
-        pred = preds.mean(dim = 0)
-        pred_map = pred_maps.mean(dim = 0)
-        return pred, pred_map
-
-
-    def time_shifting(self, x, shift_len):
-        shift_len = int(shift_len)
-        new_sample = torch.cat([x[:, shift_len:], x[:, :shift_len]], axis = 1)
-        return new_sample 
-
-    def test_step(self, batch, batch_idx):
-        self.device_type = next(self.parameters()).device
-        if self.config.fl_local:
-            pred = torch.zeros(len(batch["waveform"]), self.config.classes_num).float().to(self.device_type)
-            pred_map = torch.zeros(len(batch["waveform"]), 1024, self.config.classes_num).float().to(self.device_type)
-            for j in range(len(self.sed_models)):
-                temp_pred, temp_pred_map = self(batch["waveform"], j)
-                pred = pred + temp_pred
-                pred_map = pred_map + temp_pred_map 
-            pred = pred / len(self.sed_models)
-            pred_map = pred_map / len(self.sed_models)
-            return [
-                pred.detach().cpu().numpy(), 
-                pred_map.detach().cpu().numpy(),
-                batch["audio_name"],
-                batch["real_len"].cpu().numpy()
-            ]
-        else:
-            pred = torch.zeros(len(batch["waveform"]), self.config.classes_num).float().to(self.device_type)
-            for j in range(len(self.sed_models)):
-                temp_pred, _ = self(batch["waveform"], j)
-                pred = pred + temp_pred
-            pred = pred / len(self.sed_models)
-            return [
-                pred.detach(), 
-                batch["target"].detach(), 
-            ]
-
-    def test_epoch_end(self, test_step_outputs):
-        self.device_type = next(self.parameters()).device
-        if self.config.fl_local:
-            pred = np.concatenate([d[0] for d in test_step_outputs], axis = 0)
-            pred_map = np.concatenate([d[1] for d in test_step_outputs], axis = 0)
-            audio_name = np.concatenate([d[2] for d in test_step_outputs], axis = 0)
-            real_len = np.concatenate([d[3] for d in test_step_outputs], axis = 0)
-            heatmap_file = os.path.join(self.config.heatmap_dir, self.config.test_file + "_" + str(self.device_type) + ".npy")
-            print(pred.shape)
-            print(pred_map.shape)
-            print(real_len.shape)
-            save_npy = [
-                {
-                    "audio_name": audio_name[i],
-                    "heatmap": pred_map[i],
-                    "pred": pred[i],
-                    "real_len":real_len[i]
-                }
-                for i in range(len(pred))
-            ]
-            np.save(heatmap_file, save_npy)
-        else:
-            pred = torch.cat([d[0] for d in test_step_outputs], dim = 0)
-            target = torch.cat([d[1] for d in test_step_outputs], dim = 0)
-            gather_pred = [torch.zeros_like(pred) for _ in range(dist.get_world_size())]
-            gather_target = [torch.zeros_like(target) for _ in range(dist.get_world_size())]
-
-            dist.barrier()
-            if self.config.dataset_type == "audioset":
-                metric_dict = {
-                "mAP": 0.,
-                "mAUC": 0.,
-                "dprime": 0.
-                }
-            else:
-                metric_dict = {
-                    "acc":0.
-                }
-            dist.all_gather(gather_pred, pred)
-            dist.all_gather(gather_target, target)
-            if dist.get_rank() == 0:
-                gather_pred = torch.cat(gather_pred, dim = 0).cpu().numpy()
-                gather_target = torch.cat(gather_target, dim = 0).cpu().numpy()
-                if self.config.dataset_type == "scv2":
-                    gather_target = np.argmax(gather_target, 1)
-                metric_dict = self.evaluate_metric(gather_pred, gather_target)
-                print(self.device_type, dist.get_world_size(), metric_dict, flush = True)
-            if self.config.dataset_type == "audioset":
-                self.log("mAP", metric_dict["mAP"] * float(dist.get_world_size()), on_epoch = True, prog_bar=True, sync_dist=True)
-                self.log("mAUC", metric_dict["mAUC"] * float(dist.get_world_size()), on_epoch = True, prog_bar=True, sync_dist=True)
-                self.log("dprime", metric_dict["dprime"] * float(dist.get_world_size()), on_epoch = True, prog_bar=True, sync_dist=True)
-            else:
-                self.log("acc", metric_dict["acc"] * float(dist.get_world_size()), on_epoch = True, prog_bar=True, sync_dist=True)
-            dist.barrier()
-
-
-    

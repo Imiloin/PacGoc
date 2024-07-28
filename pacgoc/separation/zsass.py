@@ -42,12 +42,12 @@ class SourceSeparation:
         self.sr = sr
         self.query_sr = query_sr
         self.isint16 = isint16
-        pl.utilities.seed.seed_everything(seed=12412)  # set the random seed
         self.test_key = ["vocals"]  # ["vocals", "drums", "bass", "other"]
         self.config = asp_config
 
         # setup the trainer and enabel GPU
-        self.trainer = pl.Trainer(gpus=1, accelerator="auto")
+        accelerator = "gpu" if torch.cuda.is_available() else "auto"
+        self.trainer = pl.Trainer(accelerator=accelerator, devices="auto")
 
         assert ckpt is not None, "there should be a saved model when inferring"
         self.ckpt = ckpt
@@ -103,7 +103,7 @@ class SourceSeparation:
         at_wrapper = AutoTaggingWarpper(
             at_model=self.at_model, config=self.config, target_keys=self.test_key
         )
-        self.trainer.test(at_wrapper, test_dataloaders=avg_loader)
+        self.trainer.test(at_wrapper, dataloaders=avg_loader)
         self.avg_at = at_wrapper.avg_at
 
     def preprocess(self, audio_data: np.ndarray) -> np.ndarray:
@@ -155,7 +155,7 @@ class SourceSeparation:
             calc_sdr=False,
             output_wav=True,
         )
-        self.trainer.test(exp_model, test_dataloaders=loader)
+        self.trainer.test(exp_model, dataloaders=loader)
 
     def postprocess(self):
         pass

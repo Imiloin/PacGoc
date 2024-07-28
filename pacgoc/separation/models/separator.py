@@ -54,6 +54,8 @@ class SeparatorModel(pl.LightningModule):
         pad_mode = "reflect"
         window = "hann"
 
+        self.test_step_outputs = []
+
         self.stft = STFT(
             n_fft=window_size,
             hop_length=config.hop_samples,
@@ -295,14 +297,15 @@ class SeparatorModel(pl.LightningModule):
                         self.config.sample_rate,
                     )
         self.print(batch_idx, sdr)
+        self.test_step_outputs.append(sdr)
         return sdr
 
-    def test_epoch_end(self, test_step_outputs):
+    def on_test_epoch_end(self):
         avg_sdr = {}
         max_sdr = {}
         min_sdr = {}
         for dickey in self.target_keys:
-            q = [d[dickey] for d in test_step_outputs]
+            q = [d[dickey] for d in self.test_step_outputs]
             q.sort()
             avg_sdr[dickey] = np.median(q)
             max_sdr[dickey] = np.max(q)
@@ -310,3 +313,4 @@ class SeparatorModel(pl.LightningModule):
         self.print("median_sdr:", avg_sdr)
         self.print("max:", max_sdr)
         self.print("min:", min_sdr)
+        self.test_step_outputs.clear()  # free memory
