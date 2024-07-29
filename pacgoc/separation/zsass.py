@@ -50,7 +50,7 @@ class SourceSeparation:
         self.trainer = pl.Trainer(accelerator=accelerator, devices="auto")
 
         assert ckpt is not None, "there should be a saved model when inferring"
-        self.ckpt = ckpt
+        self.ckpt = torch.load(ckpt, map_location="cpu")
         htsat_config.resume_checkpoint = resume_ckpt
 
         # obtain the samples for query
@@ -105,6 +105,24 @@ class SourceSeparation:
         )
         self.trainer.test(at_wrapper, dataloaders=avg_loader)
         self.avg_at = at_wrapper.avg_at
+        
+        # pre-load the model
+        empty_dataset = MusdbDataset(
+            tracks=[]
+        )
+        self.model = ZeroShotASP(
+            channels=1, config=self.config, at_model=self.at_model, dataset=empty_dataset
+        )
+        self.model.load_state_dict(self.ckpt["state_dict"], strict=False)
+        self.exp_model = SeparatorModel(
+            model=self.model,
+            config=self.config,
+            target_keys=self.test_key,
+            avg_at=self.avg_at,
+            using_wiener=False,
+            calc_sdr=False,
+            output_wav=True,
+        )
 
     def preprocess(self, audio_data: np.ndarray) -> np.ndarray:
         """
@@ -139,23 +157,10 @@ class SourceSeparation:
         )  # the action is similar to musdbdataset, reuse it
         loader = DataLoader(dataset=dataset, num_workers=1, batch_size=1, shuffle=False)
 
-        # import seapration model
-        model = ZeroShotASP(
-            channels=1, config=self.config, at_model=self.at_model, dataset=dataset
-        )
-        # resume checkpoint
-        ckpt = torch.load(self.ckpt, map_location="cpu")
-        model.load_state_dict(ckpt["state_dict"], strict=False)
-        exp_model = SeparatorModel(
-            model=model,
-            config=self.config,
-            target_keys=self.test_key,
-            avg_at=self.avg_at,
-            using_wiener=False,
-            calc_sdr=False,
-            output_wav=True,
-        )
-        self.trainer.test(exp_model, dataloaders=loader)
+        # set the dataset for the model and run the inference
+        self.model.dataset = dataset
+        self.exp_model.model = self.model
+        self.trainer.test(self.exp_model, dataloaders=loader)
 
     def postprocess(self):
         pass
