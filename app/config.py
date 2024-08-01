@@ -23,12 +23,45 @@ MAX_AUDIO_LEN = 30  # maximum audio length, in seconds
 # ON/OFF
 # -----------------------------------------------------------------------------
 
+HARDWARE_CONTROLLER_ON = True
 AUDIO_CLASSIFIER_ON = True
 SPEAKER_PROFILING_ON = True
 SPEAKER_VERIFICATION_ON = True
 SPOOF_DETECTION_ON = True
 AUTOMATIC_SPEECH_RECOGNITION_ON = True
 AUDIO_SOURCE_SEPARATION_ON = True
+
+# -----------------------------------------------------------------------------
+# Hardware Controller
+# -----------------------------------------------------------------------------
+
+# serial
+BAUD_RATE = 115200
+BYTESIZE = 8
+PARITY = "E"
+STOPBITS = 1
+
+# return codes
+SUCCESS = "\x00"
+FAILURE = "\xff"
+
+# noise cancellation
+NC_ON = "NO"
+NC_OFF = "NF"
+NC_UPDATE = "NR"
+
+# acoustic echo cancellation
+AEC_ON = "AO"
+AEC_OFF = "AF"
+
+# tone modification
+TM_UP = "TU"
+TM_DOWN = "TD"
+TM_OFF = "TF"
+
+# output processed audio
+OUT_ON = "PO"
+OUT_OFF = "PF"
 
 # -----------------------------------------------------------------------------
 # Speaker Profiling

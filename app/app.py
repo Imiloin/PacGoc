@@ -1,7 +1,7 @@
 import os
 import sys
-from pathlib import Path
 import shutil
+from pathlib import Path
 import numpy as np
 
 # add current directory to sys.path
@@ -74,6 +74,69 @@ du = os.path.join(current_dir, "..", "wave", "du.wav")
 import paddle
 
 paddle.utils.run_check()
+
+# -----------------------------------------------------------------------------
+# Hardware Controller
+# -----------------------------------------------------------------------------
+
+from pacgoc.serial_api import Serial
+
+if config_user.HARDWARE_CONTROLLER_ON:
+    serial = Serial(
+        baudrate=config_user.BAUD_RATE,
+        bytesize=config_user.BYTESIZE,
+        parity=config_user.PARITY,
+        stopbits=config_user.STOPBITS,
+    )
+
+
+def send_command(command: str, max_retries: int = 3, timeout: float = 0.5) -> bool:
+    """
+    Send a command to the hardware controller and wait for a response.
+    """
+    global serial
+    for _ in range(max_retries):
+        serial.write(command)
+        response = serial.read(timeout=timeout)
+        if response == config_user.SUCCESS:
+            return True
+    return False
+
+
+def nc_on():
+    print("Turning on the Noise Cancellation")
+    res = send_command(config_user.NC_ON)
+    if not res:
+        gr.Info("Failed to turn on the Noise Cancellation")
+
+
+def nc_off():
+    print("Turning off the Noise Cancellation")
+    res = send_command(config_user.NC_OFF)
+    if not res:
+        gr.Info("Failed to turn off the Noise Cancellation")
+
+
+def nc_update():
+    print("Updating Noise Cancellation parameters")
+    res = send_command(config_user.NC_UPDATE)
+    if not res:
+        gr.Info("Failed to update Noise Cancellation parameters")
+
+
+def aec_on():
+    print("Turning on the Acoustic Echo Cancellation")
+    res = send_command(config_user.AEC_ON)
+    if not res:
+        gr.Info("Failed to turn on the Acoustic Echo Cancellation")
+
+
+def aec_off():
+    print("Turning off the Acoustic Echo Cancellation")
+    res = send_command(config_user.AEC_OFF)
+    if not res:
+        gr.Info("Failed to turn off the Acoustic Echo Cancellation")
+
 
 # -----------------------------------------------------------------------------
 # utils
@@ -580,6 +643,51 @@ with gr.Blocks(css=css) as demo:
             """
             )
             interval.change(set_interval, inputs=[interval], outputs=None)
+    if config_user.HARDWARE_CONTROLLER_ON:
+        with gr.Tab("硬件控制"):
+            gr.Markdown("## 硬件控制")
+            with gr.Group():
+                gr.Markdown("音频降噪")
+                with gr.Row():
+                    nc_on_btn = gr.Button("开启降噪", elem_id="violet")
+                    nc_off_btn = gr.Button("关闭降噪")
+                    nc_on_btn.click(
+                        nc_on,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                    nc_off_btn.click(
+                        nc_off,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                with gr.Row():
+                    nc_update_btn = gr.Button("更新降噪系数", elem_id="skyblue")
+                    nc_update_btn.click(
+                        nc_update,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+            with gr.Group():
+                gr.Markdown("回声消除")
+                with gr.Row():
+                    aec_on_btn = gr.Button("开启回声消除", elem_id="violet")
+                    aec_off_btn = gr.Button("关闭回声消除")
+                    aec_on_btn.click(
+                        aec_on,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                    aec_off_btn.click(
+                        aec_off,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
     if config_user.AUDIO_CLASSIFIER_ON:
         with gr.Tab("音频分类"):
             gr.Markdown("## 音频分类")

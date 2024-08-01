@@ -8,3 +8,35 @@
     font-size: 4em;
     text-align: center;
 }
+
+/* button color styles */
+#red {
+    background: red;
+    color: white;
+}
+
+#green {
+    background: green;
+    color: white;
+}
+
+#blue {
+    background: blue;
+    color: white;
+}
+
+#emerald {
+    background: #2ecc71;
+}
+
+#lime {
+    background: lime;
+}
+
+#sky {
+    background: skyblue;
+}
+
+#violet {
+    background: violet;
+}

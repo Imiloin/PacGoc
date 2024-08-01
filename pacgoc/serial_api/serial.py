@@ -18,7 +18,7 @@ class Serial:
         """
         Initialize serial port.
         """
-
+        port_name = None
         if port == "":
             # get available serial ports
             port_list = list(serial.tools.list_ports.comports())
@@ -40,6 +40,7 @@ class Serial:
                         break
                 else:
                     print("Silicon Labs CP210x USB to UART Bridge not found")
+                    raise Exception("Silicon Labs CP210x USB to UART Bridge not found")
         else:
             port_name = port
 
@@ -68,7 +69,7 @@ class Serial:
 
     def write(self, data: str | int | float | bytes | bytearray):
         """
-        Write data to serial port.
+        Write (send) data to serial port.
         """
         if isinstance(data, str):
             data = data.encode("utf-8")
@@ -82,7 +83,7 @@ class Serial:
 
     def read(self, size: int = 1, timeout: float = 0.5) -> str:
         """
-        Read data from serial port.
+        Read (receive) data from serial port.
         """
         start_time = time.time()
         wait_time = timeout / 10
@@ -90,7 +91,7 @@ class Serial:
             if self.ser.in_waiting() >= size:
                 return self.ser.read(size).decode("utf-8")
             elif time.time() - start_time > timeout:
-                print("Timeout")
+                print("Timeout when reading from serial port.")
                 return ""
             else:
                 time.sleep(wait_time)
