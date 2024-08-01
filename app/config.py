@@ -16,6 +16,9 @@ share = True
 username = "admin"
 password = "admin"
 
+INTERVAL = 10  # running interval, in seconds
+MAX_AUDIO_LEN = 30  # maximum audio length, in seconds
+
 # -----------------------------------------------------------------------------
 # ON/OFF
 # -----------------------------------------------------------------------------

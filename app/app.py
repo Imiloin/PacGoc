@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 import numpy as np
 
-# add current directory to sys.path to import pcie module
+# add current directory to sys.path
 current_dir = Path(__file__).parent
 sys.path.append(str(current_dir))
 
@@ -60,10 +60,12 @@ import gradio as gr
 import threading
 import time
 import signal
-import wave
 
-INTERVAL = 10  # running interval, in seconds
-MAX_AUDIO_LEN = 30  # maximum audio length, in seconds
+INTERVAL = config_user.INTERVAL
+MAX_AUDIO_LEN = config_user.MAX_AUDIO_LEN
+assert INTERVAL >= 2 and INTERVAL <= 20, "Interval should be between 2 and 20 seconds"
+assert MAX_AUDIO_LEN > 20, "Max audio length should be greater than 20 seconds"
+
 source = None
 SAMPLING_RATE = 48000
 isint16 = False
@@ -78,6 +80,7 @@ paddle.utils.run_check()
 # -----------------------------------------------------------------------------
 
 from pacgoc.utils.format import pcm32to16
+from utils import is_valid_wav, write_wav
 
 
 # Use Ctrl+C to quit the program
@@ -88,38 +91,6 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-
-def is_valid_wav(path):
-    if not os.path.isfile(path):
-        return False
-    if not path.lower().endswith(".wav"):
-        return False
-    try:
-        with wave.open(path, "rb") as f:
-            return True
-    except wave.Error:
-        return False
-
-
-def write_wav(data: np.ndarray, frame_rate: int, file_path: os.PathLike):
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    # pls make sure data is int16
-    data = data.astype(np.int16)
-
-    with wave.open(file_path, "w") as wav_file:
-        n_channels = 1  # single channel
-        sample_width = 2  # int16
-        n_frames = len(data)
-
-        wav_file.setnchannels(n_channels)
-        wav_file.setsampwidth(sample_width)
-        wav_file.setframerate(frame_rate)
-        wav_file.setnframes(n_frames)
-
-        # write data to file
-        wav_file.writeframes(data.tobytes())
-
-
 # -----------------------------------------------------------------------------
 # PacGoc
 # -----------------------------------------------------------------------------
@@ -128,6 +99,7 @@ from datetime import datetime
 
 LISTENING = False
 RECORDING = False
+LISTENING_INFERENCE = False
 
 LISTENING_ON = "🔴 Listening"
 LISTENING_OFF = "⚪ Listening"
@@ -152,12 +124,14 @@ def start_listen():
 
 
 def end_listen():
-    global LISTENING
+    global LISTENING, LISTENING_INFERENCE
     if LISTENING:
         print("End listening")
         LISTENING = False
+        LISTENING_INFERENCE = True
         audio_data = source.get_queue_data()
         inference(audio_data)
+        LISTENING_INFERENCE = False
         # if is recording, save the audio data to file
         if RECORDING:
             now = datetime.now()
@@ -371,7 +345,7 @@ MAX_INFER_LEN = MAX_AUDIO_LEN * SAMPLING_RATE
 
 
 def inference(audio_data: np.ndarray):
-    global LISTENING
+    global LISTENING, LISTENING_INFERENCE
     global cls_on, cls_res
     global profile_on, profile_res
     global verify_on, verify_res
@@ -406,7 +380,7 @@ def inference(audio_data: np.ndarray):
     # automatic speech recognition
     if asr_on:
         res = asr(audio_data)
-        if not LISTENING and len(res) > 1:
+        if not LISTENING_INFERENCE and len(res) > 1:
             res = res[:-1]  # remove the last punctuation
         print(res)
         asr_res = asr_res + "\n" + res
@@ -431,7 +405,7 @@ def gen_result():
         print(audio_len)
         if LISTENING:
             if audio_len > MAX_AUDIO_LEN:
-                print("Max audio length reached, auto end listening.")
+                gr.Info("Max audio length reached, auto end listening.")
                 end_listen()
         else:
             if audio_len > INTERVAL:
@@ -548,18 +522,8 @@ th_result.start()
 
 assets_dir = os.path.join(current_dir, "assets")
 pacgoc_logo = os.path.join(assets_dir, "pacgoc.svg")
+css = os.path.join(current_dir, "style.css")
 
-# remove loading orange border
-# and add centering large elem_id
-css = """
-.generating {
-    border: none;
-}
-#large span{
-    font-size: 4em;
-    text-align: center;
-}
-"""
 
 with gr.Blocks(css=css) as demo:
     gr.Markdown("# PacGoc Control Panel")
@@ -568,7 +532,7 @@ with gr.Blocks(css=css) as demo:
             minimum=2,
             maximum=20,
             step=1,
-            value=10,
+            value=config_user.INTERVAL,
             label="Interval (seconds)",
             info="Recognized audio will be updated every interval seconds.",
         )

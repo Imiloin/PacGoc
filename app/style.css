@@ -1,0 +1,10 @@
+/* remove loading orange border */
+.generating {
+    border: none;
+}
+
+/* add centering large elem_id */
+#large span {
+    font-size: 4em;
+    text-align: center;
+}
