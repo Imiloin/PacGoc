@@ -88,7 +88,7 @@ class Serial:
         start_time = time.time()
         wait_time = timeout / 10
         while True:
-            if self.ser.in_waiting() >= size:
+            if self.ser.in_waiting >= size:
                 return self.ser.read(size).decode("utf-8")
             elif time.time() - start_time > timeout:
                 print("Timeout when reading from serial port.")

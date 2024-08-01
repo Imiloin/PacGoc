@@ -103,39 +103,74 @@ def send_command(command: str, max_retries: int = 3, timeout: float = 0.5) -> bo
     return False
 
 
+def out_on():
+    print("Output processed audio.")
+    res = send_command(config_user.OUT_ON)
+    if not res:
+        gr.Info("Failed to turn on the output.")
+
+
+def out_off():
+    print("Output unprocessed audio.")
+    res = send_command(config_user.OUT_OFF)
+    if not res:
+        gr.Info("Failed to turn off the output.")
+
+
 def nc_on():
-    print("Turning on the Noise Cancellation")
+    print("Turning on the Noise Cancellation.")
     res = send_command(config_user.NC_ON)
     if not res:
-        gr.Info("Failed to turn on the Noise Cancellation")
+        gr.Info("Failed to turn on the Noise Cancellation.")
 
 
 def nc_off():
-    print("Turning off the Noise Cancellation")
+    print("Turning off the Noise Cancellation.")
     res = send_command(config_user.NC_OFF)
     if not res:
-        gr.Info("Failed to turn off the Noise Cancellation")
+        gr.Info("Failed to turn off the Noise Cancellation.")
 
 
 def nc_update():
-    print("Updating Noise Cancellation parameters")
+    print("Updating Noise Cancellation parameters.")
     res = send_command(config_user.NC_UPDATE)
     if not res:
-        gr.Info("Failed to update Noise Cancellation parameters")
+        gr.Info("Failed to update Noise Cancellation parameters.")
 
 
 def aec_on():
-    print("Turning on the Acoustic Echo Cancellation")
+    print("Turning on the Acoustic Echo Cancellation.")
     res = send_command(config_user.AEC_ON)
     if not res:
-        gr.Info("Failed to turn on the Acoustic Echo Cancellation")
+        gr.Info("Failed to turn on the Acoustic Echo Cancellation.")
 
 
 def aec_off():
-    print("Turning off the Acoustic Echo Cancellation")
+    print("Turning off the Acoustic Echo Cancellation.")
     res = send_command(config_user.AEC_OFF)
     if not res:
-        gr.Info("Failed to turn off the Acoustic Echo Cancellation")
+        gr.Info("Failed to turn off the Acoustic Echo Cancellation.")
+
+
+def tm_up():
+    print("Tone Modificaton pitch up.")
+    res = send_command(config_user.TM_UP)
+    if not res:
+        gr.Info("Failed to tone modification pitch up.")
+
+
+def tm_down():
+    print("Tone Modificaton pitch down.")
+    res = send_command(config_user.TM_DOWN)
+    if not res:
+        gr.Info("Failed to tone modification pitch down.")
+
+
+def tm_off():
+    print("Turning off the Tone Modificaton.")
+    res = send_command(config_user.TM_OFF)
+    if not res:
+        gr.Info("Failed to turn off the Tone Modificaton.")
 
 
 # -----------------------------------------------------------------------------
@@ -646,11 +681,28 @@ with gr.Blocks(css=css) as demo:
     if config_user.HARDWARE_CONTROLLER_ON:
         with gr.Tab("硬件控制"):
             gr.Markdown("## 硬件控制")
-            with gr.Group():
-                gr.Markdown("音频降噪")
+            with gr.Accordion("Output Control", open=True):
+                gr.Markdown("### 输出控制")
                 with gr.Row():
-                    nc_on_btn = gr.Button("开启降噪", elem_id="violet")
-                    nc_off_btn = gr.Button("关闭降噪")
+                    out_on_btn = gr.Button("Processed", elem_id="seafoam")
+                    out_off_btn = gr.Button("Unprocessed")
+                    out_on_btn.click(
+                        out_on,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                    out_off_btn.click(
+                        out_off,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+            with gr.Accordion("Noise Cancellation", open=True):
+                gr.Markdown("### 音频降噪")
+                with gr.Row():
+                    nc_on_btn = gr.Button("Turn On", elem_id="seafoam")
+                    nc_off_btn = gr.Button("Turn Off")
                     nc_on_btn.click(
                         nc_on,
                         inputs=None,
@@ -664,18 +716,18 @@ with gr.Blocks(css=css) as demo:
                         show_progress="hidden",
                     )
                 with gr.Row():
-                    nc_update_btn = gr.Button("更新降噪系数", elem_id="skyblue")
+                    nc_update_btn = gr.Button("Update Parameters", elem_id="skyblue")
                     nc_update_btn.click(
                         nc_update,
                         inputs=None,
                         outputs=None,
                         show_progress="hidden",
                     )
-            with gr.Group():
-                gr.Markdown("回声消除")
+            with gr.Accordion("Acoustic Echo Cancellation", open=True):
+                gr.Markdown("### 回声消除")
                 with gr.Row():
-                    aec_on_btn = gr.Button("开启回声消除", elem_id="violet")
-                    aec_off_btn = gr.Button("关闭回声消除")
+                    aec_on_btn = gr.Button("Turn On", elem_id="seafoam")
+                    aec_off_btn = gr.Button("Turn Off")
                     aec_on_btn.click(
                         aec_on,
                         inputs=None,
@@ -684,6 +736,31 @@ with gr.Blocks(css=css) as demo:
                     )
                     aec_off_btn.click(
                         aec_off,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+            with gr.Accordion("Tune Modification", open=True):
+                gr.Markdown("### 人声调整")
+                with gr.Row():
+                    tm_up_btn = gr.Button("Pitch Up", elem_id="seafoam")
+                    tm_down_btn = gr.Button("Pitch Down", elem_id="skyblue")
+                    tm_up_btn.click(
+                        tm_up,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                    tm_down_btn.click(
+                        tm_down,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                with gr.Row():
+                    tm_off_btn = gr.Button("Turn Off")
+                    tm_off_btn.click(
+                        tm_off,
                         inputs=None,
                         outputs=None,
                         show_progress="hidden",

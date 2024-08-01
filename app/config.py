@@ -45,6 +45,10 @@ STOPBITS = 1
 SUCCESS = "\x00"
 FAILURE = "\xff"
 
+# output processed audio
+OUT_ON = "PO"
+OUT_OFF = "PF"
+
 # noise cancellation
 NC_ON = "NO"
 NC_OFF = "NF"
@@ -58,10 +62,6 @@ AEC_OFF = "AF"
 TM_UP = "TU"
 TM_DOWN = "TD"
 TM_OFF = "TF"
-
-# output processed audio
-OUT_ON = "PO"
-OUT_OFF = "PF"
 
 # -----------------------------------------------------------------------------
 # Speaker Profiling
