@@ -29,6 +29,7 @@ SPEAKER_PROFILING_ON = True
 SPEAKER_VERIFICATION_ON = True
 SPOOF_DETECTION_ON = True
 AUTOMATIC_SPEECH_RECOGNITION_ON = True
+ACOUSTIC_NOISE_SUPPRESSION_ON = True
 AUDIO_SOURCE_SEPARATION_ON = True
 
 # -----------------------------------------------------------------------------
@@ -93,6 +94,14 @@ spoof_model_root = os.path.join(current_dir, "..", "models", "spoof_detection")
 asr_model_root = os.path.join(current_dir, "..", "models", "SenseVoiceSmall")
 
 # -----------------------------------------------------------------------------
+# Acoustic Noise Suppression
+# -----------------------------------------------------------------------------
+
+ans_model_root = os.path.join(current_dir, "..", "models", "speech_frcrn_ans_cirm_16k")
+ans_output_dir = os.path.join(current_dir, "..", "sample", "ans_output")
+ans_output_filename = "denoised.wav"
+
+# -----------------------------------------------------------------------------
 # Audio Source Separation
 # -----------------------------------------------------------------------------
 
@@ -104,5 +113,5 @@ resume_ckpt = os.path.join(
 )
 query_folder = os.path.join(current_dir, "..", "sample", "query")
 query_sr = 16000
-output_dir = os.path.join(current_dir, "..", "sample", "zsass_output")
-output_filename = "pred.wav"
+separation_output_dir = os.path.join(current_dir, "..", "sample", "zsass_output")
+separation_output_filename = "pred.wav"

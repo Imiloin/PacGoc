@@ -52,6 +52,7 @@ from pacgoc.profiling import Emotion
 from pacgoc.verification import Vector
 from pacgoc.spoof import SpoofDetector
 from pacgoc.asr import ASR
+from pacgoc.ans import ANS
 from pacgoc.separation import SourceSeparation
 
 import argparse
@@ -80,6 +81,8 @@ paddle.utils.run_check()
 # -----------------------------------------------------------------------------
 
 from pacgoc.serial_api import Serial
+
+serial = None
 
 if config_user.HARDWARE_CONTROLLER_ON:
     serial = Serial(
@@ -412,6 +415,30 @@ def get_asr_result():
 
 
 # -----------------------------------------------------------------------------
+# Acoustic Noise Suppression
+# -----------------------------------------------------------------------------
+
+ans_on = False
+ans_noisy = du
+ans_res = du
+
+
+def ans_checkbox(enable_ans):
+    global ans_on
+    ans_on = enable_ans
+
+
+def get_ans_noisy():
+    global ans_noisy
+    return ans_noisy
+
+
+def get_ans_result():
+    global ans_res
+    return ans_res
+
+
+# -----------------------------------------------------------------------------
 # Audio Source Separation
 # -----------------------------------------------------------------------------
 
@@ -449,6 +476,7 @@ def inference(audio_data: np.ndarray):
     global verify_on, verify_res
     global spoof_on, spoof_res
     global asr_on, asr_res
+    global ans_on, ans_noisy, ans_res
     global separation_on, separation_mixture, separation_res
     if len(audio_data) > MAX_INFER_LEN:
         audio_data = audio_data[:MAX_INFER_LEN]
@@ -484,12 +512,21 @@ def inference(audio_data: np.ndarray):
         asr_res = asr_res + "\n" + res
     else:
         asr_res = ""
+    # acoustic noise suppression
+    if ans_on:
+        ans(audio_data)
+        ans_noisy = os.path.join(config_user.ans_output_dir, "noisy.wav")
+        ans_res = os.path.join(
+            config_user.ans_output_dir, config_user.ans_output_filename
+        )
     # audio source separation
     if separation_on:
         separation(audio_data)
-        separation_mixture = os.path.join(config_user.output_dir, "mixture.wav")
+        separation_mixture = os.path.join(
+            config_user.separation_output_dir, "mixture.wav"
+        )
         separation_res = os.path.join(
-            config_user.output_dir, config_user.output_filename
+            config_user.separation_output_dir, config_user.separation_output_filename
         )
 
 
@@ -559,6 +596,7 @@ age_gender = None
 emotion = None
 vector = None
 asr = None
+ans = None
 separation = None
 
 if config_user.AUDIO_CLASSIFIER_ON:
@@ -594,6 +632,14 @@ if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
         isint16=isint16,
         model_root=config_user.asr_model_root,
     )
+if config_user.ACOUSTIC_NOISE_SUPPRESSION_ON:
+    ans = ANS(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        model_root=config_user.ans_model_root,
+        output_path=config_user.ans_output_dir,
+        output_filename=config_user.ans_output_filename,
+    )
 if config_user.AUDIO_SOURCE_SEPARATION_ON:
     separation = SourceSeparation(
         sr=SAMPLING_RATE,
@@ -602,8 +648,8 @@ if config_user.AUDIO_SOURCE_SEPARATION_ON:
         ckpt=config_user.ckpt,
         resume_ckpt=config_user.resume_ckpt,
         query_folder=config_user.query_folder,
-        output_path=config_user.output_dir,
-        output_filename=config_user.output_filename,
+        output_path=config_user.separation_output_dir,
+        output_filename=config_user.separation_output_filename,
     )
 
 # Start the audio source
@@ -969,6 +1015,65 @@ with gr.Blocks(css=css) as demo:
                 get_asr_result,
                 inputs=None,
                 outputs=asr_result,
+                every=1,
+                show_progress=False,
+            )
+            with gr.Row(equal_height=False):
+                start_btn = gr.Button("Start listening", scale=3.5)
+                end_btn = gr.Button("End listening", scale=3.5)
+                listen_status = gr.Textbox(
+                    LISTENING_OFF,
+                    container=False,
+                    show_label=False,
+                    interactive=False,
+                    scale=1,
+                )
+                start_btn.click(
+                    start_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                end_btn.click(
+                    end_listen,
+                    inputs=None,
+                    outputs=listen_status,
+                    show_progress="hidden",
+                )
+                demo.load(
+                    get_listen_status,
+                    inputs=None,
+                    outputs=listen_status,
+                    every=1,
+                    show_progress="hidden",
+                )
+    if config_user.ACOUSTIC_NOISE_SUPPRESSION_ON:
+        with gr.Tab("音频去噪"):
+            enable_ans = gr.Checkbox(
+                value=False, label="Enable Acoustic Noise Suppression"
+            )
+            enable_ans.change(ans_checkbox, inputs=[enable_ans], outputs=None)
+            ans_noisy = gr.Audio(
+                label="noisy",
+                type="filepath",
+                every=1,
+            )
+            ans_result = gr.Audio(
+                label="denoised",
+                type="filepath",
+                every=1,
+            )
+            demo.load(
+                get_ans_noisy,
+                inputs=None,
+                outputs=ans_noisy,
+                every=1,
+                show_progress=False,
+            )
+            demo.load(
+                get_ans_result,
+                inputs=None,
+                outputs=ans_result,
                 every=1,
                 show_progress=False,
             )

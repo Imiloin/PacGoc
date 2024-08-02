@@ -1,6 +1,7 @@
 import os
 import librosa
 import numpy as np
+import soundfile as sf
 from modelscope.pipelines import pipeline
 from modelscope.utils.constant import Tasks
 from ..utils import pcm16to32
@@ -32,6 +33,7 @@ class ANS:
 
         assert output_path is not None, "output_path should not be None"
         os.makedirs(output_path, exist_ok=True)
+        self.noisy_file = os.path.join(output_path, "noisy.wav")
         self.output_file = os.path.join(output_path, output_filename)
 
         self._patch()
@@ -59,6 +61,7 @@ class ANS:
             audio = librosa.resample(
                 audio, orig_sr=self.sr, target_sr=ANS.MODEL_SAMPLE_RATE, scale=True
             )
+        sf.write(self.noisy_file, audio.astype(np.float32), ANS.MODEL_SAMPLE_RATE)
         return audio
 
     def inference(self, audio: np.ndarray):
@@ -67,10 +70,10 @@ class ANS:
         """
         result = self.pipeline(audio, output_path=self.output_file)
         return result
-    
+
     def postprocess(self):
         pass
-    
+
     def __call__(self, audio_data: np.ndarray) -> os.PathLike:
         """
         Run the entire pipeline on the audio data.
