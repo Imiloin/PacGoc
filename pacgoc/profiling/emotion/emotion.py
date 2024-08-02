@@ -27,7 +27,10 @@ class Emotion:
 
         self.model = AutoModel(model=model_root)
 
-    def preprocess(self, audio_data: np.ndarray):
+    def preprocess(self, audio_data: np.ndarray) -> np.ndarray:
+        """
+        Preprocess the audio data, convert it to 16kHz float32 np.ndarray.
+        """
         if self.isint16:
             audio = audio_data.view(dtype=np.int16)
             audio = pcm16to32(audio)
@@ -48,7 +51,7 @@ class Emotion:
         )
         return rec_result
 
-    def postprocess(self, rec_result):
+    def postprocess(self, rec_result) -> str:
         """
         Return the emotion with the highest score
         生气/angry
