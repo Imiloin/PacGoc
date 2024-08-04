@@ -31,6 +31,7 @@ SPOOF_DETECTION_ON = True
 AUTOMATIC_SPEECH_RECOGNITION_ON = True
 ACOUSTIC_NOISE_SUPPRESSION_ON = True
 AUDIO_SOURCE_SEPARATION_ON = True
+LLM_CHAT_ON = True
 
 # -----------------------------------------------------------------------------
 # Hardware Controller
@@ -115,3 +116,9 @@ query_folder = os.path.join(current_dir, "..", "sample", "query")
 query_sr = 16000
 separation_output_dir = os.path.join(current_dir, "..", "sample", "zsass_output")
 separation_output_filename = "pred.wav"
+
+# -----------------------------------------------------------------------------
+# LLM Chat
+# -----------------------------------------------------------------------------
+
+llm_model_root = os.path.join(current_dir, "..", "models", "Qwen2-1.5B-Instruct")

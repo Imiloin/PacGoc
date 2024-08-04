@@ -54,6 +54,7 @@ from pacgoc.spoof import SpoofDetector
 from pacgoc.asr import ASR
 from pacgoc.ans import ANS
 from pacgoc.separation import SourceSeparation
+from llm import Qwen2
 
 import argparse
 import pandas as pd
@@ -463,6 +464,106 @@ def get_separation_result():
 
 
 # -----------------------------------------------------------------------------
+# LLM Chat
+# -----------------------------------------------------------------------------
+
+import re
+
+
+def _extract_command(response: str):
+    # Extract the command part using regex
+    match = re.search(r"<command><\|(.+?)\|><\|(.+?)\|></command>", response)
+    if not match:
+        return None
+    command = [match.group(1), match.group(2)]
+    print(f"Detected command: {command}")
+    return command
+
+
+def _execute_command(command: list[str]):
+    # Execute the command
+    if command[0] not in ["开启", "关闭"]:
+        return None, None
+    if command[1] not in ["音频降噪", "回声消除", "变声"]:
+        return None, None
+    print(f"Executing command: {command}")
+    if config_user.HARDWARE_CONTROLLER_ON:
+        pass
+    time.sleep(10)  ######
+    return command[0], command[1]
+
+
+def process_command(response: str):
+    command = _extract_command(response)
+    if command:
+        _execute_command(command)
+
+
+def predict(_query, _chatbot, _task_history):
+    global llm
+    print(f"User: {_query}")
+    _chatbot.append((_query, ""))
+    full_response = ""
+    response = ""
+    for new_text in llm.chat_stream(
+        _query,
+        history=_task_history,
+    ):
+        response += new_text
+        _chatbot[-1] = (_query, response)
+
+        yield _chatbot
+        full_response = response
+
+    print(f"History: {_task_history}")
+    _task_history.append((_query, full_response))
+    print(f"Qwen2-Instruct: {full_response}")
+    # Process command if any
+    thread = threading.Thread(target=process_command, args=(full_response,))
+    thread.start()
+
+
+def regenerate(_chatbot, _task_history):
+    global llm
+    if not _task_history:
+        yield _chatbot
+        return
+    item = _task_history.pop(-1)
+    _chatbot.pop(-1)
+    yield from predict(item[0], _chatbot, _task_history)
+
+
+def reset_user_input():
+    return gr.update(value="")
+
+
+def reset_state(_chatbot, _task_history):
+    global llm
+    _task_history.clear()
+    _chatbot.clear()
+    llm.gc()
+    return _chatbot
+
+
+def start_talk():
+    global asr
+    _ = source.get_queue_data()  # flush the audio buffer
+    if asr is not None:
+        # clear asr cache
+        asr.clear_cache()
+    print("Talking...")
+
+
+def end_talk(_chatbot, _task_history):
+    global asr
+    audio_data = source.get_queue_data()
+    prompt = asr(audio_data)
+    if len(prompt) > 1:
+        prompt = prompt[:-1]  # remove the last punctuation
+    yield from predict(prompt, _chatbot, _task_history)
+
+
+# -----------------------------------------------------------------------------
 # Main Function that Generates Results
 # -----------------------------------------------------------------------------
 
@@ -530,6 +631,7 @@ def inference(audio_data: np.ndarray):
         )
 
 
+# infiniate loop to generate results
 def gen_result():
     global LISTENING
     # flush the audio buffer
@@ -595,9 +697,11 @@ cls = None
 age_gender = None
 emotion = None
 vector = None
+spoof_detector = None
 asr = None
 ans = None
 separation = None
+llm = None
 
 if config_user.AUDIO_CLASSIFIER_ON:
     cls = CLS(sr=SAMPLING_RATE, isint16=isint16)
@@ -626,7 +730,7 @@ if config_user.SPOOF_DETECTION_ON:
         isint16=isint16,
         model_root=config_user.spoof_model_root,
     )
-if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON:
+if config_user.AUTOMATIC_SPEECH_RECOGNITION_ON or config_user.LLM_CHAT_ON:
     asr = ASR(
         sr=SAMPLING_RATE,
         isint16=isint16,
@@ -650,6 +754,10 @@ if config_user.AUDIO_SOURCE_SEPARATION_ON:
         query_folder=config_user.query_folder,
         output_path=config_user.separation_output_dir,
         output_filename=config_user.separation_output_filename,
+    )
+if config_user.LLM_CHAT_ON:
+    llm = Qwen2(
+        checkpoint_path=config_user.llm_model_root,
     )
 
 # Start the audio source
@@ -1168,6 +1276,50 @@ with gr.Blocks(css=css) as demo:
                     every=1,
                     show_progress="hidden",
                 )
+    if config_user.LLM_CHAT_ON:
+        with gr.Tab("语言模型聊天"):
+            chatbot = gr.Chatbot(label="PacGoc-Chat", elem_classes="control-height")
+            with gr.Row():
+                start_talk_btn = gr.Button("Start talking", scale=3.5)
+                end_talk_btn = gr.Button("End talking", scale=3.5)
+            query = gr.Textbox(lines=2, label="Input")
+            task_history = gr.State([])
+            with gr.Row():
+                empty_btn = gr.Button("🧹 Clear History")
+                submit_btn = gr.Button("🚀 Submit")
+                regen_btn = gr.Button("🤔️ Regenerate")
+
+            submit_btn.click(
+                predict,
+                [query, chatbot, task_history],
+                [chatbot],
+                show_progress=True,
+            )
+            submit_btn.click(reset_user_input, inputs=[], outputs=[query])
+            empty_btn.click(
+                reset_state,
+                [chatbot, task_history],
+                outputs=[chatbot],
+                show_progress=True,
+            )
+            regen_btn.click(
+                regenerate,
+                [chatbot, task_history],
+                [chatbot],
+                show_progress=True,
+            )
+            start_talk_btn.click(
+                start_talk,
+                inputs=None,
+                outputs=None,
+                show_progress="hidden",
+            )
+            end_talk_btn.click(
+                end_talk,
+                inputs=[chatbot, task_history],
+                outputs=[chatbot],
+                show_progress=True,
+            )
 
 
 def share_auth(username, password):

@@ -2,7 +2,7 @@ soundcard==0.4.3
 pyserial>=3.5
 tensorflow[and-cuda]==2.16.1
 paddlepaddle-gpu==2.6.1
-transformers[torch]
+transformers[torch]>=4.43.3
 modelscope~=1.13.3
 funasr>=1.1.2
 pytorch_lightning>=2.0.0
