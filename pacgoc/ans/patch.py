@@ -88,12 +88,12 @@ def custom_forward(self, inputs: Dict[str, Any],
         else:
             outputs = self.model(
                 dict(noisy=ndarray))['wav_l2'][0].cpu().numpy()
-    # scale data to get largest amplitude to be 32768
+    # scale data to get largest amplitude to be the same as input
     self.custom_max_out = np.max(np.abs(outputs))
     if hasattr(self, 'custom_max_orig'):
         if self.custom_max_out > self.custom_max_orig * 0.5:
-            # outputs = outputs * self.custom_max_orig / self.custom_max_out
-            outputs = outputs / self.custom_max_out
+            outputs = outputs * self.custom_max_orig / self.custom_max_out
+            # outputs = outputs / self.custom_max_out
     # convert to 16-bit PCM
     outputs = (outputs[:nsamples] * 32768).astype(np.int16).tobytes()
     return {OutputKeys.OUTPUT_PCM: outputs}
