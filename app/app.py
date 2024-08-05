@@ -99,11 +99,12 @@ def send_command(command: str, max_retries: int = 3, timeout: float = 0.5) -> bo
     Send a command to the hardware controller and wait for a response.
     """
     global serial
-    for _ in range(max_retries):
-        serial.write(command)
-        response = serial.read(timeout=timeout)
-        if response == config_user.SUCCESS:
-            return True
+    if config_user.HARDWARE_CONTROLLER_ON:
+        for _ in range(max_retries):
+            serial.write(command)
+            response = serial.read(timeout=timeout)
+            if response == config_user.SUCCESS:
+                return True
     return False
 
 
@@ -275,6 +276,20 @@ def cls_checkbox(enable_cls):
 def get_cls_result():
     global cls_res
     return pd.DataFrame(cls_res, columns=["Category", "Score"])
+
+
+def open_cls():
+    if config_user.AUDIO_CLASSIFIER_ON:
+        cls_checkbox(True)
+    else:
+        gr.Info("Audio classification is not enabled.")
+
+
+def close_cls():
+    if config_user.AUDIO_CLASSIFIER_ON:
+        cls_checkbox(False)
+    else:
+        gr.Info("Audio classification is not enabled.")
 
 
 # -----------------------------------------------------------------------------
@@ -475,21 +490,32 @@ def _extract_command(response: str):
     match = re.search(r"<command><\|(.+?)\|><\|(.+?)\|></command>", response)
     if not match:
         return None
-    command = [match.group(1), match.group(2)]
+    command = (match.group(1), match.group(2))
     print(f"Detected command: {command}")
     return command
 
 
-def _execute_command(command: list[str]):
+execution_dict = {
+    ("开启", "音频降噪"): nc_on,
+    ("关闭", "音频降噪"): nc_off,
+    ("开启", "回声消除"): aec_on,
+    ("关闭", "回声消除"): aec_off,
+    ("开启", "变声"): tm_up,
+    ("关闭", "变声"): tm_off,
+    ("开启", "音频分类"): open_cls,
+    ("关闭", "音频分类"): close_cls,
+}
+
+
+def _execute_command(command: tuple[str]):
     # Execute the command
     if command[0] not in ["开启", "关闭"]:
         return None, None
-    if command[1] not in ["音频降噪", "回声消除", "变声"]:
+    if command[1] not in ["音频降噪", "回声消除", "变声", "音频分类"]:
         return None, None
     print(f"Executing command: {command}")
-    if config_user.HARDWARE_CONTROLLER_ON:
-        pass
-    time.sleep(10)  ######
+    func = execution_dict[command]
+    func()
     return command[0], command[1]
 
 
@@ -549,7 +575,6 @@ def start_talk():
     global asr
     _ = source.get_queue_data()  # flush the audio buffer
     if asr is not None:
-        # clear asr cache
         asr.clear_cache()
     print("Talking...")
 
@@ -558,8 +583,6 @@ def end_talk(_chatbot, _task_history):
     global asr
     audio_data = source.get_queue_data()
     prompt = asr(audio_data)
-    if len(prompt) > 1:
-        prompt = prompt[:-1]  # remove the last punctuation
     yield from predict(prompt, _chatbot, _task_history)
 
 
