@@ -21,23 +21,44 @@ default_system_message = """
 ```
 <command><|开启|><|变声|></command>已为您开启变声功能！
 ```
-指令中的开关必须为`开启`、`关闭`中的一个，指令中的功能名称必须为`音频降噪`、`回声消除`、`变声`、`音频分类`中的一个且只能有一个。指令必须严格按照这样的格式来，否则无法生效。**如果要开启或关闭某个功能，必须要先使用指令，没有使用指令之前请不要宣称自己开启或关闭了某个功能！**
-当你回复用户的请求时，**请首先想一想自己是否需要启用/关闭某个功能**，如果需要，请你在回答的开头调用指令。如果不需要调用指令，请你热情而简洁地回答用户的问题，或与ta进行友好的交流。用户主要使用简体中文。
+指令中的开关必须为`开启`、`关闭`中的一个，指令中的功能名称必须为`音频降噪`、`回声消除`、`变声`、`音频分类`中的一个且只能有一个。指令必须严格按照这样的格式来，功能名称不能省略，否则无法生效。**如果要开启或关闭某个功能，必须要先使用指令，没有使用指令之前请不要宣称自己开启或关闭了某个功能！**
+当你回复用户的请求时，**请首先想一想自己是否需要启用/关闭某个功能**，如果需要，请你在回答的开头调用指令。如果不需要调用指令，你只需要正常聊天，热情而简洁地与用户进行友好的交流即可。用户主要使用简体中文。
 """
 
-boost_tokens = ["<", ">", "command"]
+boost_tokens = ["<"]
+diminish_tokens = ["我"]
 
 
 # defining a custom logits processor to boost certain tokens
 class CustomLogitsProcessor(LogitsProcessor):
-    def __init__(self, token_ids, boost_factor):
-        self.token_ids = token_ids
+    FIRST_N = 10
+
+    def __init__(
+        self,
+        boost_token_ids,
+        diminish_token_ids,
+        boost_factor: float = 0.5,
+        diminish_factor: float = 0.5,
+    ):
+        self.boost_token_ids = boost_token_ids
+        self.diminish_token_ids = diminish_token_ids
         self.boost_factor = boost_factor
+        self.diminish_factor = diminish_factor
+        self.refresh()
 
     def __call__(self, input_ids, scores):
-        for token_id in self.token_ids:
-            scores[:, token_id] += self.boost_factor
+        if self.first_n > 0:
+            for token_id in self.boost_token_ids:
+                scores[:, token_id] += self.boost_factor
+            for token_id in self.diminish_token_ids:
+                scores[:, token_id] -= self.diminish_factor
+            self.first_call = False
+        self.first_n -= 1
         return scores
+
+    def refresh(self):
+        # only modify the first N tokens
+        self.first_n = CustomLogitsProcessor.FIRST_N
 
 
 class Qwen2:
@@ -54,10 +75,14 @@ class Qwen2:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.tokenizer = self._load_model_tokenizer()
 
-        boost_token_ids = self.tokenizer.convert_tokens_to_ids(boost_tokens)
+        boost_token_ids = self.convert_tokens_to_ids(boost_tokens)
+        diminish_token_ids = self.convert_tokens_to_ids(diminish_tokens)
 
-        self.logits_processor = LogitsProcessorList(
-            [CustomLogitsProcessor(boost_token_ids, boost_factor=2.0)]
+        self.logits_processor = CustomLogitsProcessor(
+            boost_token_ids,
+            diminish_token_ids,
+            boost_factor=1.0,
+            diminish_factor=100.0,  ###### maybe too high?
         )
 
         # self._warm_up()
@@ -89,6 +114,11 @@ class Qwen2:
             no_repeat_ngram_size=2,
         )
         self.gc()
+
+    def convert_tokens_to_ids(self, tokens: list):
+        vocab = self.tokenizer.get_vocab()
+        tokenized_tokens = [self.tokenizer.tokenize(token).pop() for token in tokens]
+        return [vocab[token] for token in tokenized_tokens if token in vocab]
 
     def gc(self):
         import gc
@@ -136,10 +166,11 @@ class Qwen2:
             timeout=60.0,
             skip_special_tokens=True,
         )
+        self.logits_processor.refresh()
         generation_kwargs = dict(
             input_ids=inputs,
             streamer=streamer,
-            logits_processor=self.logits_processor,
+            logits_processor=LogitsProcessorList([self.logits_processor]),
         )
         thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
         thread.start()
