@@ -24,7 +24,7 @@ MAX_AUDIO_LEN = 30  # maximum audio length, in seconds
 # -----------------------------------------------------------------------------
 
 HARDWARE_CONTROLLER_ON = True
-AUDIO_CLASSIFIER_ON = True
+AUDIO_CLASSIFICATION_ON = True
 SPEAKER_PROFILING_ON = True
 SPEAKER_VERIFICATION_ON = True
 SPOOF_DETECTION_ON = True

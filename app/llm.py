@@ -3,6 +3,7 @@ from threading import Thread
 import gradio as gr
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
+from transformers import LogitsProcessor, LogitsProcessorList
 
 import os
 
@@ -24,6 +25,20 @@ default_system_message = """
 当你回复用户的请求时，**请首先想一想自己是否需要启用/关闭某个功能**，如果需要，请你在回答的开头调用指令。如果不需要调用指令，请你热情而简洁地回答用户的问题，或与ta进行友好的交流。用户主要使用简体中文。
 """
 
+boost_tokens = ["<", ">", "command"]
+
+
+# defining a custom logits processor to boost certain tokens
+class CustomLogitsProcessor(LogitsProcessor):
+    def __init__(self, token_ids, boost_factor):
+        self.token_ids = token_ids
+        self.boost_factor = boost_factor
+
+    def __call__(self, input_ids, scores):
+        for token_id in self.token_ids:
+            scores[:, token_id] += self.boost_factor
+        return scores
+
 
 class Qwen2:
     MAX_INPUT_TOKEN_LENGTH = 4096
@@ -38,7 +53,14 @@ class Qwen2:
         self.system_message = system_message
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.tokenizer = self._load_model_tokenizer()
-        self._warm_up()
+
+        boost_token_ids = self.tokenizer.convert_tokens_to_ids(boost_tokens)
+
+        self.logits_processor = LogitsProcessorList(
+            [CustomLogitsProcessor(boost_token_ids, boost_factor=2.0)]
+        )
+
+        # self._warm_up()
 
     def _load_model_tokenizer(self):
         tokenizer = AutoTokenizer.from_pretrained(
@@ -117,6 +139,7 @@ class Qwen2:
         generation_kwargs = dict(
             input_ids=inputs,
             streamer=streamer,
+            logits_processor=self.logits_processor,
         )
         thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
         thread.start()

@@ -279,14 +279,14 @@ def get_cls_result():
 
 
 def open_cls():
-    if config_user.AUDIO_CLASSIFIER_ON:
+    if config_user.AUDIO_CLASSIFICATION_ON:
         cls_checkbox(True)
     else:
         gr.Info("Audio classification is not enabled.")
 
 
 def close_cls():
-    if config_user.AUDIO_CLASSIFIER_ON:
+    if config_user.AUDIO_CLASSIFICATION_ON:
         cls_checkbox(False)
     else:
         gr.Info("Audio classification is not enabled.")
@@ -726,7 +726,7 @@ ans = None
 separation = None
 llm = None
 
-if config_user.AUDIO_CLASSIFIER_ON:
+if config_user.AUDIO_CLASSIFICATION_ON:
     cls = CLS(sr=SAMPLING_RATE, isint16=isint16)
 if config_user.SPEAKER_PROFILING_ON:
     age_gender = AgeGender(
@@ -942,7 +942,7 @@ with gr.Blocks(css=css) as demo:
                         outputs=None,
                         show_progress="hidden",
                     )
-    if config_user.AUDIO_CLASSIFIER_ON:
+    if config_user.AUDIO_CLASSIFICATION_ON:
         with gr.Tab("音频分类"):
             gr.Markdown("## 音频分类")
             enable_cls = gr.Checkbox(value=False, label="Enable Audio Classification")
