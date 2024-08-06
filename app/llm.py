@@ -20,7 +20,7 @@ default_system_message = """
 ```
 <command><|开启|><|变声|></command>已为您开启变声功能！
 ```
-指令中的开关必须为`开启`、`关闭`中的一个，指令中的功能名称必须为`音频降噪`、`回声消除`、`变声`、`音频分类`中的一个且只能有一个。指令必须严格按照这样的格式来，否则无法生效。如果要开启或关闭某个功能，**必须要调用指令**，没有使用指令之前请不要宣称自己控制了某个功能！
+指令中的开关必须为`开启`、`关闭`中的一个，指令中的功能名称必须为`音频降噪`、`回声消除`、`变声`、`音频分类`中的一个且只能有一个。指令必须严格按照这样的格式来，否则无法生效。**如果要开启或关闭某个功能，必须要先使用指令，没有使用指令之前请不要宣称自己开启或关闭了某个功能！**
 当你回复用户的请求时，**请首先想一想自己是否需要启用/关闭某个功能**，如果需要，请你在回答的开头调用指令。如果不需要调用指令，请你热情而简洁地回答用户的问题，或与ta进行友好的交流。用户主要使用简体中文。
 """
 
@@ -36,7 +36,9 @@ class Qwen2:
     ):
         self.checkpoint_path = checkpoint_path
         self.system_message = system_message
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.tokenizer = self._load_model_tokenizer()
+        self._warm_up()
 
     def _load_model_tokenizer(self):
         tokenizer = AutoTokenizer.from_pretrained(
@@ -51,6 +53,20 @@ class Qwen2:
         ).eval()
         model.generation_config.max_new_tokens = Qwen2.DEFAULT_MAX_NEW_TOKENS
         return model, tokenizer
+
+    def _warm_up(self):
+        # warm up model
+        inputs = self.tokenizer.encode(
+            "Give me a short introduction to large language model.", return_tensors="pt"
+        )
+        inputs = inputs.to(self.device)
+        self.model.generate(
+            inputs,
+            max_new_tokens=Qwen2.DEFAULT_MAX_NEW_TOKENS,
+            num_beams=1,
+            no_repeat_ngram_size=2,
+        )
+        self.gc()
 
     def gc(self):
         import gc
@@ -90,7 +106,7 @@ class Qwen2:
             )
 
         inputs = torch.cat((system_inputs, chat_inputs), dim=1)
-        inputs = inputs.to(self.model.device)
+        inputs = inputs.to(self.device)
 
         streamer = TextIteratorStreamer(
             tokenizer=self.tokenizer,
