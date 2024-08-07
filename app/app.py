@@ -49,7 +49,7 @@ import config_user
 from pacgoc.cls import CLS
 from pacgoc.profiling import AgeGender
 from pacgoc.profiling import Emotion
-from pacgoc.verification import Vector
+from pacgoc.sv import Vector
 from pacgoc.spoof import SpoofDetector
 from pacgoc.asr import ASR
 from pacgoc.ans import ANS
