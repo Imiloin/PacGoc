@@ -5,7 +5,6 @@ import numpy as np
 from ...utils import pcm16to32
 
 
-################# conflicting with paddle.utils.run_check() ????
 class Emotion:
     MODEL_SAMPLE_RATE = 16000
 
@@ -26,6 +25,14 @@ class Emotion:
             exit(1)
 
         self.model = AutoModel(model=model_root)
+
+        # run a test
+        if isint16:
+            test_audio = np.zeros(shape=(Emotion.MODEL_SAMPLE_RATE,), dtype=np.int16)
+        else:
+            test_audio = np.zeros(shape=(Emotion.MODEL_SAMPLE_RATE,), dtype=np.float32)
+        self(test_audio)
+        print("Emotion recognition model loaded")
 
     def preprocess(self, audio_data: np.ndarray) -> np.ndarray:
         """

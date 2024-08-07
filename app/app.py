@@ -73,10 +73,6 @@ SAMPLING_RATE = 48000
 isint16 = False
 du = os.path.join(current_dir, "..", "wave", "du.wav")
 
-import paddle
-
-paddle.utils.run_check()
-
 # -----------------------------------------------------------------------------
 # Hardware Controller
 # -----------------------------------------------------------------------------

@@ -29,7 +29,7 @@ class CLS:
         if device == "cpu":
             print("CLS: device is cpu")
 
-        # 创建Infer类的实例
+        # create executor
         self.cls = CLSExecutor()
         if hasattr(self.cls, "model"):
             return
