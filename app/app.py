@@ -723,7 +723,12 @@ separation = None
 llm = None
 
 if config_user.AUDIO_CLASSIFICATION_ON:
-    cls = CLS(sr=SAMPLING_RATE, isint16=isint16)
+    cls = CLS(
+        sr=SAMPLING_RATE,
+        isint16=isint16,
+        model_root=config_user.cls_model_root,
+        topk=3,
+    )
 if config_user.SPEAKER_PROFILING_ON:
     age_gender = AgeGender(
         sr=SAMPLING_RATE,

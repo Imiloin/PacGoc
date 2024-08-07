@@ -26,7 +26,10 @@ class AgeGender:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        if not os.path.exists(model_root):
+        if (
+            not os.path.exists(model_root)
+            and model_root != "audeering/wav2vec2-large-robust-24-ft-age-gender"
+        ):
             print(f"Model root {model_root} does not exist.")
             exit(1)
 

@@ -1,21 +1,20 @@
 import os
 import numpy as np
-import paddle
-import yaml
 import librosa
-from paddlespeech.cli.cls import CLSExecutor
-from paddle.audio.features import LogMelSpectrogram
+import torch
+from .ced_model.feature_extraction_ced import CedFeatureExtractor
+from .ced_model.modeling_ced import CedForAudioClassification
 from ..utils import pcm16to32
 
 
 class CLS:
-    MODEL_SAMPLE_RATE = 32000
+    MODEL_SAMPLE_RATE = 16000
 
     def __init__(
         self,
         sr: int = 16000,
         isint16: bool = True,
-        model: str = "panns_cnn14",
+        model_root: os.PathLike = "mispeech/ced-base",
         topk: int = 3,
     ):
         """
@@ -23,123 +22,64 @@ class CLS:
         """
         self.sr = sr
         self.isint16 = isint16
-
-        device = paddle.get_device()
-        paddle.set_device(device)
-        if device == "cpu":
-            print("CLS: device is cpu")
-
-        # create executor
-        self.cls = CLSExecutor()
-        if hasattr(self.cls, "model"):
-            return
-
-        tag = model + "-" + "32k"  # panns_cnn14-32k
-        self.cls.task_resource.set_task_model(tag, version=None)
-        self.cls.cfg_path = os.path.join(
-            self.cls.task_resource.res_dir, self.cls.task_resource.res_dict["cfg_path"]
-        )
-        self.cls.label_file = os.path.join(
-            self.cls.task_resource.res_dir,
-            self.cls.task_resource.res_dict["label_file"],
-        )
-        self.cls.ckpt_path = os.path.join(
-            self.cls.task_resource.res_dir, self.cls.task_resource.res_dict["ckpt_path"]
-        )
-
-        # config
-        with open(self.cls.cfg_path, "r") as f:
-            self.cls._conf = yaml.safe_load(f)
-
-        # labels
-        self.cls._label_list = []
-        with open(self.cls.label_file, "r") as f:
-            for line in f:
-                self.cls._label_list.append(line.strip())
-
-        assert topk <= len(
-            self.cls._label_list
-        ), "Value of topk is larger than number of labels."
         self.topk = topk
 
-        # model
-        model_class = self.cls.task_resource.get_model_class(model)
-        model_dict = paddle.load(self.cls.ckpt_path)
-        self.cls.model = model_class(extract_embedding=False)
-        self.cls.model.set_state_dict(model_dict)
-        self.cls.model.eval()
-        
-        # run a test
-        if isint16:
-            test_audio = np.zeros(shape=(CLS.MODEL_SAMPLE_RATE,), dtype=np.int16)
-        else:
-            test_audio = np.zeros(shape=(CLS.MODEL_SAMPLE_RATE,), dtype=np.float32)
-        self(test_audio)
-        print("Audio Classification model loaded")
+        if not os.path.exists(model_root) and model_root != "mispeech/ced-base":
+            print(f"Model root {model_root} does not exist.")
+            exit(1)
+        self.feature_extractor = CedFeatureExtractor.from_pretrained(model_root)
+        self.model = CedForAudioClassification.from_pretrained(model_root)
 
     def preprocess(self, audio_data: np.ndarray):
         """
         Input preprocess and return paddle.Tensor stored in cls.input.
         Input content can be a text(tts), a file(asr, cls) or a streaming(not supported yet).
         """
-        feat_conf = self.cls._conf["feature"]
         if self.isint16:
-            waveform = audio_data.view(dtype=np.int16)
+            audio_data = audio_data.view(dtype=np.int16)
             # convert to float32
-            waveform = pcm16to32(waveform)
-        else:
-            waveform = audio_data
-
+            audio_data = pcm16to32(audio_data)
         if self.sr != CLS.MODEL_SAMPLE_RATE:
-            waveform = librosa.resample(
-                waveform, orig_sr=self.sr, target_sr=CLS.MODEL_SAMPLE_RATE, scale=True
+            # resample to 16000Hz
+            audio_data = librosa.resample(
+                audio_data, orig_sr=self.sr, target_sr=CLS.MODEL_SAMPLE_RATE, scale=True
             )
+        return audio_data
 
-        # Feature extraction
-        feature_extractor = LogMelSpectrogram(
-            sr=feat_conf["sample_rate"],
-            n_fft=feat_conf["n_fft"],
-            hop_length=feat_conf["hop_length"],
-            window=feat_conf["window"],
-            win_length=feat_conf["window_length"],
-            f_min=feat_conf["f_min"],
-            f_max=feat_conf["f_max"],
-            n_mels=feat_conf["n_mels"],
-        )
-        feats = feature_extractor(
-            paddle.to_tensor(paddle.to_tensor(waveform).unsqueeze(0))
-        )
-        self.cls._inputs["feats"] = paddle.transpose(feats, [0, 2, 1]).unsqueeze(
-            1
-        )  # [B, N, T] -> [B, 1, T, N]
-
-    def infer(self):
+    def infer(self, aduio_data: np.ndarray):
         """
         Model inference
         """
-        self.cls.infer()
+        inputs = self.feature_extractor(
+            aduio_data, sampling_rate=CLS.MODEL_SAMPLE_RATE, return_tensors="pt"
+        )
 
-    def postprocess(self) -> list[tuple]:
+        with torch.no_grad():
+            logits = self.model(**inputs).logits
+        return logits
+
+    def postprocess(self, logits: torch.Tensor) -> list[tuple]:
         """
         Output postprocess and return human-readable results.
         Return a list of tuples, each tuple contains a label and a score.
         """
-        tensor_audio = self.cls._outputs["logits"].squeeze(0).numpy()
+        top_k_logits, top_k_indices = torch.topk(logits, self.topk, dim=-1)
 
-        topk_idx = (-tensor_audio).argsort()[: self.topk]
-
+        # get top k labels and scores and format to list of tuples
         res = []
-        for idx in topk_idx:
-            label, score = self.cls._label_list[idx], tensor_audio[idx]
+        for i in range(self.topk):
+            class_id = top_k_indices[0, i].item()
+            score = top_k_logits[0, i].item()
+            label = self.model.config.id2label[class_id]
             res.append((label, score))
-            # print(f"{label}: {score}")
 
+        # [('Speech', 0.8502144), ('Speech synthesizer', 0.27297658), ('Narration, monologue', 0.117594205)]
         return res
 
     def __call__(self, audio_data: np.ndarray) -> list:
         """
         Input preprocess, model inference and output postprocess.
         """
-        self.preprocess(audio_data)
-        self.infer()
-        return self.postprocess()
+        audio_data = self.preprocess(audio_data)
+        logits = self.infer(audio_data)
+        return self.postprocess(logits)
