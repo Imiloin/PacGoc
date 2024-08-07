@@ -1303,8 +1303,9 @@ with gr.Blocks(css=css) as demo:
         with gr.Tab("语言模型聊天"):
             chatbot = gr.Chatbot(label="PacGoc-Chat", elem_classes="control-height")
             with gr.Row():
-                start_talk_btn = gr.Button("Start talking", scale=3.5)
-                end_talk_btn = gr.Button("End talking", scale=3.5)
+                start_talk_btn = gr.Button("Start talking", scale=4)
+                end_talk_btn = gr.Button("End talking", scale=4)
+                retry_btn = gr.Button("🔄", scale=1)
             query = gr.Textbox(lines=2, label="Input")
             task_history = gr.State([])
             with gr.Row():
@@ -1341,6 +1342,12 @@ with gr.Blocks(css=css) as demo:
                 end_talk,
                 inputs=[chatbot, task_history],
                 outputs=[chatbot],
+                show_progress=True,
+            )
+            retry_btn.click(
+                regenerate,
+                [chatbot, task_history],
+                [chatbot],
                 show_progress=True,
             )
 
