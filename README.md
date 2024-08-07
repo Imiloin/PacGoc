@@ -1,5 +1,6 @@
-# PacGoc
-
+<h1 align="center">
+    PacGoc: 基于紫光同创 FPGA 的音频处理系统
+</h1>
 <div align="center">
 
 <!-- <img src="README.assets/header.svg" width="750"></img> -->
@@ -26,7 +27,7 @@
 
 ## Introduction
 
-**PacGoc** 是 2024 年第八届全国大学生集成电路创新创业大赛紫光同创杯的全国(?)等奖作品。本项目中包含了上位机部分（PC 端）使用的代码。
+**PacGoc** 是 2024 年第八届全国大学生集成电路创新创业大赛紫光同创杯的全国(?)等奖作品。本项目包含了上位机部分（PC 端）使用的代码。
 
 本项目构建了 Python 软件包 `pacgoc`，包含以下子模块：
 
@@ -42,7 +43,7 @@
 + `serial_api`：Serial API，串口通信模块
 + `spoof`：Spoof Detection，变声检测模块
 + `utils`：Utilities，工具函数模块
-+ `verification`：Speaker Verification，声纹识别模块
++ `sv`：Speaker Verification，声纹识别模块
 
 项目使用 Python 语言编写。`pcie_api` 和 `serial_api` 模块须配合紫光同创盘古-50开发板（MES50HP）以及相应的硬件代码使用，其他模块可在普通 PC 上运行。
 
@@ -58,7 +59,7 @@
 ### Environment Setup
 
 > [!NOTE]  
-> 本项目的测试环境为 Ubuntu 22.04 + CUDA 11.8 + cuDNN 8.9.7 + Python 3.10 + PyTorch 2.3.0 + TensorFlow 2.16.1。
+> 本项目的测试环境为 Ubuntu 20.04 + CUDA 11.8 + cuDNN 8.9.7 + Python 3.10 + PyTorch 2.3.0 + TensorFlow 2.16.1。
 
 首先应确保安装了 [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) 、[cuDNN](https://developer.nvidia.com/cudnn) 及相应的 Nvidia 显卡驱动。本项目的测试版本为 CUDA 11.8 + cuDNN 8.9.7，其他版本的兼容性未知。
 
@@ -73,14 +74,7 @@ sudo apt install ffmpeg libsndfile1
 
 如果您想快速复现比赛中使用的项目，在环境部署完毕后，可以直接查看[使用整合包的方法](#use-the-integration-package)，跳过下面的安装步骤。
 
-### Installaion for pacgoc package
-
-克隆本仓库：
-
-```bash
-git clone https://github.com/Imiloin/PacGoc.git
-cd PacGoc
-```
+### Install pacgoc package
 
 创建一个新的 python 3.10 conda 环境并激活：
 
@@ -104,6 +98,19 @@ pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https
 pip install -r requirements.txt
 ```
 
+克隆本仓库：
+
+```bash
+git clone https://github.com/Imiloin/PacGoc.git
+cd PacGoc
+```
+
+安装 `pacgoc` 包：
+
+```bash
+pip install -e .
+```
+
 ### Installation for webui
 
 在已有的环境下安装 Gradio：
@@ -124,6 +131,10 @@ pip install -r requirements_app.txt
 ## Use the integration package
 
 ## FAQ
+
+### 硬件部分的代码在哪？
+
+本项目仅包含上位机部分的软件代码。硬件代码主要由 [@hosionn](https://github.com/hosionn) 负责，开源计划待定。
 
 ### 能在 Windows 上运行吗？
 
@@ -153,12 +164,13 @@ Logo 整体为字母 “N” 的形状，与紫光同创标识相呼应。整体
 
 + [speech_frcrn_ans_cirm_16k](https://modelscope.cn/models/iic/speech_frcrn_ans_cirm_16k)
 + [SenseVoiceSmall](https://huggingface.co/FunAudioLLM/SenseVoiceSmall)
-+ [panns_cnn14-32k](https://github.com/PaddlePaddle/PaddleSpeech/blob/develop/docs/source/released_model.md#audio-classification-models)
++ [ced-base](https://huggingface.co/mispeech/ced-base)
 + [wav2vec2-large-robust-24-ft-age-gender](https://huggingface.co/audeering/wav2vec2-large-robust-24-ft-age-gender)
 + [emotion2vec+large](https://huggingface.co/emotion2vec)
 + [zeroshot_asp_full](https://github.com/RetroCirce/Zero_Shot_Audio_Source_Separation)
 + [distilhubert](https://huggingface.co/ntu-spml/distilhubert)
 + [ecapatdnn_voxceleb12-16k](https://github.com/PaddlePaddle/PaddleSpeech/blob/develop/docs/source/released_model.md#speaker-verification-models)
++ [Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct)
 
 ## License
 
