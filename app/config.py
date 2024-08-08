@@ -12,7 +12,7 @@ recordings_dir = os.path.join(current_dir, "..", "recordings")
 # App
 # -----------------------------------------------------------------------------
 
-share = True
+share = False
 username = "admin"
 password = "admin"
 
@@ -84,6 +84,9 @@ emotion_model_root = os.path.join(current_dir, "..", "models", "emotion2vec_plus
 # Speaker Verification
 # -----------------------------------------------------------------------------
 
+sv_model_root = os.path.join(
+    current_dir, "..", "models", "sv0_ecapa_tdnn_voxceleb12_ckpt_0_1_2"
+)
 enroll_embeddings_json = os.path.join(current_dir, "..", "sample", "embeddings.json")
 enroll_audio_dir = None
 color_map = {"Unknown": "gray", "A": "green"}

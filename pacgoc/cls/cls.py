@@ -18,7 +18,7 @@ class CLS:
         topk: int = 3,
     ):
         """
-        Init model and other resources.
+        Init model and feature extractor.
         """
         self.sr = sr
         self.isint16 = isint16
@@ -32,8 +32,7 @@ class CLS:
 
     def preprocess(self, audio_data: np.ndarray):
         """
-        Input preprocess and return paddle.Tensor stored in cls.input.
-        Input content can be a text(tts), a file(asr, cls) or a streaming(not supported yet).
+        Preprocess the audio data, convert to float32 and resample to 16000Hz if necessary.
         """
         if self.isint16:
             audio_data = audio_data.view(dtype=np.int16)

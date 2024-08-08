@@ -19,6 +19,7 @@ class Vector:
         self,
         sr: int = 16000,
         isint16: bool = True,
+        model_root: os.PathLike = "ecapatdnn_voxceleb12",
         threshold: float = 0.7,
         enroll_embeddings: os.PathLike = None,
         enroll_audio_dir: os.PathLike = None,
@@ -32,6 +33,7 @@ class Vector:
         """
         self.sr = sr
         self.isint16 = isint16
+        self.model_root = model_root
         self.threshold = threshold
 
         self.executor = VectorExecutor()
@@ -111,13 +113,9 @@ class Vector:
         # we download the pretrained model and store it in the res_path
         self.executor.res_path = self.executor.task_resource.res_dir
 
-        self.executor.cfg_path = os.path.join(
-            self.executor.task_resource.res_dir,
-            self.executor.task_resource.res_dict["cfg_path"],
-        )
+        self.executor.cfg_path = os.path.join(self.model_root, "conf", "model.yaml")
         self.executor.ckpt_path = os.path.join(
-            self.executor.task_resource.res_dir,
-            self.executor.task_resource.res_dict["ckpt_path"] + ".pdparams",
+            self.model_root, "model", "model.pdparams"
         )
 
         # stage 2: read and config and init the model body
@@ -151,7 +149,10 @@ class Vector:
 
         if self.sr != Vector.MODEL_SAMPLE_RATE:
             waveform = librosa.resample(
-                waveform, orig_sr=self.sr, target_sr=Vector.MODEL_SAMPLE_RATE, scale=True
+                waveform,
+                orig_sr=self.sr,
+                target_sr=Vector.MODEL_SAMPLE_RATE,
+                scale=True,
             )
 
         # stage 2: get the audio feat
