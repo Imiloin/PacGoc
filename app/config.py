@@ -85,7 +85,7 @@ emotion_model_root = os.path.join(current_dir, "..", "models", "emotion2vec_plus
 # -----------------------------------------------------------------------------
 
 sv_model_root = os.path.join(
-    current_dir, "..", "models", "sv0_ecapa_tdnn_voxceleb12_ckpt_0_1_2"
+    current_dir, "..", "models", "speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common"
 )
 enroll_embeddings_json = os.path.join(current_dir, "..", "sample", "embeddings.json")
 enroll_audio_dir = None

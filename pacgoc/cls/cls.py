@@ -69,6 +69,7 @@ class CLS:
         for i in range(self.topk):
             class_id = top_k_indices[0, i].item()
             score = top_k_logits[0, i].item()
+            score = round(score, 5)  # round to 5 decimal places
             label = self.model.config.id2label[class_id]
             res.append((label, score))
 

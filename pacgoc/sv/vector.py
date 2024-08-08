@@ -1,14 +1,10 @@
 import os
 import json
 from typing import Union
-import paddle
 import librosa
 import numpy as np
-from yacs.config import CfgNode
-from paddlespeech.cli.vector.infer import VectorExecutor
-from paddlespeech.vector.modules.sid_model import SpeakerIdetification
-from paddleaudio.compliance.librosa import melspectrogram
-from paddlespeech.vector.io.batch import feature_normalize
+import torch
+from modelscope.pipelines import pipeline
 from ..utils import pcm16to32
 
 
@@ -19,7 +15,7 @@ class Vector:
         self,
         sr: int = 16000,
         isint16: bool = True,
-        model_root: os.PathLike = "ecapatdnn_voxceleb12",
+        model_root: os.PathLike = "iic/speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common",
         threshold: float = 0.7,
         enroll_embeddings: os.PathLike = None,
         enroll_audio_dir: os.PathLike = None,
@@ -36,11 +32,10 @@ class Vector:
         self.model_root = model_root
         self.threshold = threshold
 
-        self.executor = VectorExecutor()
-        device = paddle.get_device()
-        paddle.set_device(device)
-        if device == "cpu":
-            print("Vector: device is cpu")
+        self.pipeline = pipeline(
+            task="speaker-verification",
+            model=model_root,
+        )
 
         if enroll_embeddings is None and enroll_audio_dir is None:
             raise ValueError("Please provide enroll_embeddings or enroll_audio_dir.")
@@ -58,7 +53,10 @@ class Vector:
             # Generate embeddings for all enroll audios and save them to a json file
             self.enroll_embeddings = {}
             for enroll_audio in wav_files:
-                enroll_embedding = self.executor(enroll_audio)
+                print("generating embedding for %s" % enroll_audio)
+                audio = self.pipeline.preprocess([enroll_audio])
+                enroll_embedding = self.pipeline.forward(audio)
+                enroll_embedding = enroll_embedding.numpy()
                 audio_file_name_with_extension = os.path.basename(enroll_audio)
                 audio_file_name, _ = os.path.splitext(audio_file_name_with_extension)
                 self.enroll_embeddings[audio_file_name] = (
@@ -77,8 +75,6 @@ class Vector:
             else:
                 raise ValueError("Invalid enroll_embeddings file path.")
 
-        self._init_executor()
-
     def _is_valid_json(self, json_file: str) -> bool:
         if not os.path.exists(json_file):
             return False
@@ -88,132 +84,69 @@ class Vector:
             return False
         return True
 
-    def _init_executor(
-        self,
-        model_type: str = "ecapatdnn_voxceleb12",
-        sample_rate: int = 16000,
-        task=None,
-    ):
-        """
-        Init the neural network model and load the model parameters.
-        """
-        # stage 0: avoid to init the mode again
-        self.executor.task = task
-        if hasattr(self.executor, "model"):
-            return
-
-        # stage 1: get the model and config path
-        #          if we want init the network from the model stored in the disk,
-        #          we must pass the config path and the ckpt model path
-        # get the mode from pretrained list
-        sample_rate_str = "16k" if sample_rate == 16000 else "8k"
-        tag = model_type + "-" + sample_rate_str
-        self.executor.task_resource.set_task_model(tag, version=None)
-        # get the model from the pretrained list
-        # we download the pretrained model and store it in the res_path
-        self.executor.res_path = self.executor.task_resource.res_dir
-
-        self.executor.cfg_path = os.path.join(self.model_root, "conf", "model.yaml")
-        self.executor.ckpt_path = os.path.join(
-            self.model_root, "model", "model.pdparams"
-        )
-
-        # stage 2: read and config and init the model body
-        self.executor.config = CfgNode(new_allowed=True)
-        self.executor.config.merge_from_file(self.executor.cfg_path)
-
-        # stage 3: get the model name to instance the model network with dynamic_import
-        model_name = model_type[: model_type.rindex("_")]
-        model_class = self.executor.task_resource.get_model_class(model_name)
-        model_conf = self.executor.config.model
-        backbone = model_class(**model_conf)
-        model = SpeakerIdetification(
-            backbone=backbone, num_class=self.executor.config.num_speakers
-        )
-        self.executor.model = model
-        self.executor.model.eval()
-
-        # stage 4: load the model parameters
-        model_dict = paddle.load(self.executor.ckpt_path)
-        self.executor.model.set_state_dict(model_dict)
-
     def preprocess(self, audio_data: np.ndarray):
-        """Extract the audio feature from the audio data."""
-        # stage 1: load the audio sample points
+        """
+        Preprocess the audio data, convert to float32 and resample to 16000Hz if necessary.
+        """
         if self.isint16:
-            waveform = audio_data.view(dtype=np.int16)
+            audio_data = audio_data.view(dtype=np.int16)
             # convert to float32
-            waveform = pcm16to32(waveform)
-        else:
-            waveform = audio_data
-
+            audio_data = pcm16to32(audio_data)
         if self.sr != Vector.MODEL_SAMPLE_RATE:
-            waveform = librosa.resample(
-                waveform,
+            # resample to 16000Hz
+            audio_data = librosa.resample(
+                audio_data,
                 orig_sr=self.sr,
                 target_sr=Vector.MODEL_SAMPLE_RATE,
                 scale=True,
             )
+        # audio_data = torch.from_numpy(audio_data) ######
+        return audio_data
 
-        # stage 2: get the audio feat
-        # Note: Now we only support fbank feature
-        try:
-            feat = melspectrogram(
-                x=waveform,
-                sr=self.executor.config.sr,
-                n_mels=self.executor.config.n_mels,
-                window_size=self.executor.config.window_size,
-                hop_length=self.executor.config.hop_size,
-            )
-        except Exception as e:
-            print(f"feat occurs exception {e}")
-
-        feat = paddle.to_tensor(feat).unsqueeze(0)
-        # in inference period, the lengths is all one without padding
-        lengths = paddle.ones([1])
-
-        # stage 3: we do feature normalize,
-        #          Now we assume that the feat must do normalize
-        feat = feature_normalize(feat, mean_norm=True, std_norm=False)
-
-        # stage 4: store the feat and length in the _inputs,
-        #          which will be used in other function
-        self.executor._inputs["feats"] = feat
-        self.executor._inputs["lengths"] = lengths
-
-    def infer(self):
-        """Infer the model to get the embedding
-
-        Args:
-            model_type (str): speaker verification model type
+    def infer(self, data) -> torch.Tensor:
         """
-        # stage 0: get the feat and length from _inputs
-        feats = self.executor._inputs["feats"]
-        lengths = self.executor._inputs["lengths"]
-
-        # stage 1: get the audio embedding
-        # embedding from (1, emb_size, 1) -> (emb_size)
-        embedding = self.executor.model.backbone(feats, lengths).squeeze().numpy()
-
-        # stage 2: put the embedding and dim info to _outputs property
-        #          the embedding type is numpy.array
-        self.executor._outputs["embedding"] = embedding
-
-    def postprocess(self) -> Union[str, os.PathLike]:
+        Forward the model to get the embedding.
         """
-        Return the audio embedding info.
-        """
-        embedding = self.executor._outputs["embedding"]
-        return embedding
+        return self.pipeline.model(data)
 
-    def verify(self, embedding: Union[str, os.PathLike], threshold: float = 0.7) -> str:
+    def postprocess(
+        self, input: torch.Tensor, file_name: str = "emb", save_dir: os.PathLike = None
+    ):
+        """
+        Save the embedding to a npy file.
+        """
+        if save_dir is not None:
+            # save the embeddings
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = os.path.join(save_dir, "%s.npy" % file_name)
+            np.save(save_path, input.numpy())
+
+    def compute_cos_similarity(
+        self,
+        emb1: Union[np.ndarray, torch.Tensor],
+        emb2: Union[np.ndarray, torch.Tensor],
+    ) -> float:
+        if isinstance(emb1, np.ndarray):
+            emb1 = torch.from_numpy(emb1)
+        if isinstance(emb2, np.ndarray):
+            emb2 = torch.from_numpy(emb2)
+        assert len(emb1.shape) == 2 and len(emb2.shape) == 2
+        cos = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+        cosine = cos(emb1, emb2)
+        return cosine.item()
+
+    def verify(
+        self, embedding: Union[np.ndarray, torch.Tensor], threshold: float = 0.7
+    ) -> str:
         """
         Verify the speaker by the audio embedding.
         Return the speaker id if the score is above the threshold.
         """
         scores = []
         for enroll_audio, enroll_embedding in self.enroll_embeddings.items():
-            score = self.executor.get_embeddings_score(enroll_embedding, embedding)
+            enroll_embedding = np.array(enroll_embedding)
+            enroll_embedding = torch.from_numpy(enroll_embedding)
+            score = self.compute_cos_similarity(enroll_embedding, embedding)
             scores.append((enroll_audio, score))
 
         ## Sort the scores in descending order and get the top 3
@@ -233,8 +166,7 @@ class Vector:
             return speaker_id
 
     def __call__(self, audio_data: np.ndarray) -> str:
-        self.preprocess(audio_data)
-        self.infer()
-        emmbedding = self.postprocess()
-        speaker = self.verify(emmbedding)
-        return speaker
+        data = self.preprocess(audio_data)
+        emmbedding = self.infer(data)
+        speaker_id = self.verify(emmbedding)
+        return speaker_id

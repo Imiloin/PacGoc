@@ -59,7 +59,8 @@
 ### Environment Setup
 
 > [!NOTE]  
-> 本项目的测试环境为 Ubuntu 20.04 + CUDA 11.8 + cuDNN 8.9.7 + Python 3.10 + PyTorch 2.3.0 + TensorFlow 2.16.1。
+> 本项目的硬件配置为 intel Core i5-12400F 处理器、 NVIDIA GeForce RTX 3060 12 GB 显卡。
+> 测试环境为 Ubuntu 20.04 + CUDA 11.8 + cuDNN 8.9.7 + Python 3.10 + PyTorch 2.3.0 + TensorFlow 2.16.1。
 
 首先应确保安装了 [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) 、[cuDNN](https://developer.nvidia.com/cudnn) 及相应的 Nvidia 显卡驱动。本项目的测试版本为 CUDA 11.8 + cuDNN 8.9.7，其他版本的兼容性未知。
 
@@ -128,6 +129,9 @@ pip install -r requirements_app.txt
 
 ### Use the Gradio app
 
+> [!IMPORTANT]  
+> 如果完全启用所有功能，至少需要 10 GB 的显存，请注意您的硬件配置。
+
 ## Use the integration package
 
 ## FAQ
@@ -149,13 +153,12 @@ Logo 整体为字母 “N” 的形状，与紫光同创标识相呼应。整体
 > “If I have seen further, it is by standing on the shoulders of giants.”
 > <div align="right">- Issac Newton</div>
 
-本项目使用了 [pybind11](https://github.com/pybind/pybind11) 完成了 PCIe 与 Python 的交互，感谢 pybind11 的作者和贡献者。
+本项目使用了 [pybind11](https://github.com/pybind/pybind11) 完成了 PCIe 接口在 Python 中的调用，感谢 pybind11 的作者和贡献者。
 
 本项目使用 [Gradio](https://gradio.app/) 轻松完成了 UI 界面，感谢 Gradio 的作者和贡献者。
 
 本项目使用了很多软件包提供的 API，极大节省了开发时间。在此向这些开源项目的作者和贡献者表示感谢（排名不分先后）：
 
-+ [PaddleSpeech](https://github.com/PaddlePaddle/PaddleSpeech)
 + [modelscope](https://github.com/modelscope/modelscope)
 + [FunASR](https://github.com/modelscope/FunASR)
 + [Transformers](https://github.com/huggingface/transformers)
@@ -169,7 +172,7 @@ Logo 整体为字母 “N” 的形状，与紫光同创标识相呼应。整体
 + [emotion2vec+large](https://huggingface.co/emotion2vec)
 + [zeroshot_asp_full](https://github.com/RetroCirce/Zero_Shot_Audio_Source_Separation)
 + [distilhubert](https://huggingface.co/ntu-spml/distilhubert)
-+ [ecapatdnn_voxceleb12-16k](https://github.com/PaddlePaddle/PaddleSpeech/blob/develop/docs/source/released_model.md#speaker-verification-models)
++ [speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common](https://modelscope.cn/models/iic/speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common)
 + [Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct)
 
 ## License

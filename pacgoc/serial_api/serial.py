@@ -8,7 +8,7 @@ class Serial:
 
     def __init__(
         self,
-        port: str = "",
+        port: str = None,
         baudrate: int = 115200,
         bytesize: int = 8,
         parity: str = "E",
@@ -19,7 +19,7 @@ class Serial:
         Initialize serial port.
         """
         port_name = None
-        if port == "":
+        if port is None:
             # get available serial ports
             port_list = list(serial.tools.list_ports.comports())
             print(port_list)

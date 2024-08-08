@@ -6,13 +6,12 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import logging
 import os
-import h5py
+# import h5py
 import json
 import librosa
 from datetime import datetime
-from tqdm import tqdm
+# from tqdm import tqdm
 from scipy import stats
 import torch.nn as nn
 import torch.nn.functional as F
@@ -96,18 +95,18 @@ def float32_to_int16(x):
 
 
 # index for each class
-def process_idc(index_path, classes_num, filename):
-    # load data
-    logging.info("Load Data...............")
-    idc = [[] for _ in range(classes_num)]
-    with h5py.File(index_path, "r") as f:
-        for i in tqdm(range(len(f["target"]))):
-            t_class = np.where(f["target"][i])[0]
-            for t in t_class:
-                idc[t].append(i)
-    print(idc)
-    np.save(filename, idc)
-    logging.info("Load Data Succeed...............")
+# def process_idc(index_path, classes_num, filename):
+#     # load data
+#     logging.info("Load Data...............")
+#     idc = [[] for _ in range(classes_num)]
+#     with h5py.File(index_path, "r") as f:
+#         for i in tqdm(range(len(f["target"]))):
+#             t_class = np.where(f["target"][i])[0]
+#             for t in t_class:
+#                 idc[t].append(i)
+#     print(idc)
+#     np.save(filename, idc)
+#     logging.info("Load Data Succeed...............")
 
 def clip_bce(pred, target):
     """Binary crossentropy loss.
