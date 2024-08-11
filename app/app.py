@@ -106,72 +106,100 @@ def send_command(command: str, max_retries: int = 3, timeout: float = 0.5) -> bo
 
 def out_on():
     print("Output processed audio.")
-    res = send_command(config_user.OUT_ON)
-    if not res:
+    state = send_command(config_user.OUT_ON)
+    if not state:
         gr.Info("Failed to turn on the output.")
 
 
 def out_off():
     print("Output unprocessed audio.")
-    res = send_command(config_user.OUT_OFF)
-    if not res:
+    state = send_command(config_user.OUT_OFF)
+    if not state:
         gr.Info("Failed to turn off the output.")
 
 
 def nc_on():
     print("Turning on the Noise Cancellation.")
-    res = send_command(config_user.NC_ON)
-    if not res:
+    state = send_command(config_user.NC_ON)
+    if not state:
         gr.Info("Failed to turn on the Noise Cancellation.")
 
 
 def nc_off():
     print("Turning off the Noise Cancellation.")
-    res = send_command(config_user.NC_OFF)
-    if not res:
+    state = send_command(config_user.NC_OFF)
+    if not state:
         gr.Info("Failed to turn off the Noise Cancellation.")
 
 
 def nc_update():
     print("Updating Noise Cancellation parameters.")
-    res = send_command(config_user.NC_UPDATE)
-    if not res:
+    state = send_command(config_user.NC_UPDATE)
+    if not state:
         gr.Info("Failed to update Noise Cancellation parameters.")
 
 
 def aec_on():
     print("Turning on the Acoustic Echo Cancellation.")
-    res = send_command(config_user.AEC_ON)
-    if not res:
+    state = send_command(config_user.AEC_ON)
+    if not state:
         gr.Info("Failed to turn on the Acoustic Echo Cancellation.")
 
 
 def aec_off():
     print("Turning off the Acoustic Echo Cancellation.")
-    res = send_command(config_user.AEC_OFF)
-    if not res:
+    state = send_command(config_user.AEC_OFF)
+    if not state:
         gr.Info("Failed to turn off the Acoustic Echo Cancellation.")
 
 
 def tm_up():
     print("Tone Modificaton pitch up.")
-    res = send_command(config_user.TM_UP)
-    if not res:
+    state = send_command(config_user.TM_UP)
+    if not state:
         gr.Info("Failed to tone modification pitch up.")
 
 
 def tm_down():
     print("Tone Modificaton pitch down.")
-    res = send_command(config_user.TM_DOWN)
-    if not res:
+    state = send_command(config_user.TM_DOWN)
+    if not state:
         gr.Info("Failed to tone modification pitch down.")
 
 
 def tm_off():
     print("Turning off the Tone Modificaton.")
-    res = send_command(config_user.TM_OFF)
-    if not res:
+    state = send_command(config_user.TM_OFF)
+    if not state:
         gr.Info("Failed to turn off the Tone Modificaton.")
+
+
+def record_start():
+    print("Start recording.")
+    state = send_command(config_user.RECORD_START)
+    if not state:
+        gr.Info("Failed to start recording.")
+
+
+def record_end():
+    print("End recording.")
+    state = send_command(config_user.RECORD_END)
+    if not state:
+        gr.Info("Failed to end recording.")
+
+
+def playback_start():
+    print("Start playback.")
+    state = send_command(config_user.PLAYBACK_START)
+    if not state:
+        gr.Info("Failed to start playback.")
+
+
+def playback_end():
+    print("End playback.")
+    state = send_command(config_user.PLAYBACK_END)
+    if not state:
+        gr.Info("Failed to end playback.")
 
 
 # -----------------------------------------------------------------------------
@@ -224,6 +252,7 @@ def start_listen():
 
 def end_listen():
     global LISTENING, LISTENING_INFERENCE
+    global RECORDING
     if LISTENING:
         print("End listening")
         LISTENING = False
@@ -922,8 +951,8 @@ with gr.Blocks(css=css) as demo:
             with gr.Accordion("Tune Modification", open=True):
                 gr.Markdown("### 人声调整")
                 with gr.Row():
-                    tm_up_btn = gr.Button("Pitch Up", elem_id="seafoam")
-                    tm_down_btn = gr.Button("Pitch Down", elem_id="skyblue")
+                    tm_up_btn = gr.Button("Pitch Up", elem_id="skyblue")
+                    tm_down_btn = gr.Button("Pitch Down", elem_id="mistyrose")
                     tm_up_btn.click(
                         tm_up,
                         inputs=None,
@@ -940,6 +969,40 @@ with gr.Blocks(css=css) as demo:
                     tm_off_btn = gr.Button("Turn Off")
                     tm_off_btn.click(
                         tm_off,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+            with gr.Accordion("Record and Playback", open=True):
+                gr.Markdown("### 录音和播放")
+                with gr.Row():
+                    record_start_btn = gr.Button("Start Recording", elem_id="skyblue")
+                    record_end_btn = gr.Button("End Recording")
+                    record_start_btn.click(
+                        record_start,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                    record_end_btn.click(
+                        record_end,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                with gr.Row():
+                    playback_start_btn = gr.Button(
+                        "Start Playback", elem_id="mistyrose"
+                    )
+                    playback_end_btn = gr.Button("End Playback")
+                    playback_start_btn.click(
+                        playback_start,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                    playback_end_btn.click(
+                        playback_end,
                         inputs=None,
                         outputs=None,
                         show_progress="hidden",

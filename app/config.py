@@ -65,6 +65,12 @@ TM_UP = "TU"
 TM_DOWN = "TD"
 TM_OFF = "TF"
 
+# record & playback
+RECORD_START = "RS"
+RECORD_END = "RE"
+PLAYBACK_START = "PS"
+PLAYBACK_END = "PE"
+
 # -----------------------------------------------------------------------------
 # Audio Classification
 # -----------------------------------------------------------------------------
