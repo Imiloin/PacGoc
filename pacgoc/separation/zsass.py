@@ -164,6 +164,9 @@ class SourceSeparation:
 
     def postprocess(self):
         pass
+    
+    def __str__(self):
+        return os.path.join(self.output_path, self.output_filename)
 
     def __call__(self, audio_data: np.ndarray):
         """

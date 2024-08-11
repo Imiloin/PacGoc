@@ -121,10 +121,10 @@ ans_output_filename = "denoised.wav"
 # Audio Source Separation
 # -----------------------------------------------------------------------------
 
-ckpt = os.path.join(
+separation_ckpt = os.path.join(
     current_dir, "..", "models", "zeroshot_separation", "zeroshot_asp_full.ckpt"
 )
-resume_ckpt = os.path.join(
+separation_resume_ckpt = os.path.join(
     current_dir, "..", "models", "zeroshot_separation", "htsat_audioset_2048d.ckpt"
 )
 query_folder = os.path.join(current_dir, "..", "sample", "query")
