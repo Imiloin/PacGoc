@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import shutil
 from pathlib import Path
@@ -15,30 +16,75 @@ sys.path.append(str(current_dir))
 config_path = current_dir / "config.py"
 config_user_path = current_dir / "config_user.py"
 
+
+def extract_vars(file_path):
+    with open(file_path, "r") as f:
+        content = f.read()
+
+    # split the content into logical lines
+    logical_lines = []
+    current_line = ""
+    for line in content.splitlines():
+        if line.endswith("\\"):
+            current_line += line[:-1].rstrip() + " "
+        else:
+            current_line += line
+            logical_lines.append(current_line.strip())
+            current_line = ""
+
+    # regular expression pattern to match variable definitions
+    var_pattern = re.compile(r"^(\w+)\s*=\s*(.*)")
+
+    vars_set = {
+        match.group(1) for line in logical_lines for match in var_pattern.finditer(line)
+    }
+
+    return vars_set
+
+
 # check if config_user.py exists
 if not config_user_path.exists():
     shutil.copy(config_path, config_user_path)
 else:
-    # check if config_user.py is up-to-date with config.py
-    with open(config_path, "r") as f:
-        config_vars = {line.split("=")[0].strip() for line in f if "=" in line}
-
-    with open(config_user_path, "r") as f:
-        user_config_vars = {line.split("=")[0].strip() for line in f if "=" in line}
+    config_vars = extract_vars(config_path)
+    user_config_vars = extract_vars(config_user_path)
+    print(config_vars)
+    print(user_config_vars)
 
     missing_vars = config_vars - user_config_vars
 
     # update config_user.py with missing variables from config.py
     if missing_vars:
+        # read config.py
         with open(config_path, "r") as f:
-            config_lines = f.readlines()
+            config_content = f.readlines()
 
-        with open(config_user_path, "a") as f:
+        with open(config_user_path, "a") as f_user:
             for var in missing_vars:
-                for line in config_lines:
-                    if line.startswith(var):
-                        f.write(line)
-                        break
+                writing = False
+                # track open brackets to check if a variable is defined in a single line
+                open_brackets = 0
+                for line in config_content:
+                    # check if the variable is defined in the current line
+                    if re.match(rf"^\s*{var}\s*=", line):
+                        writing = True
+                    if writing:
+                        # update brackets count
+                        open_brackets += (
+                            line.count("(") + line.count("[") + line.count("{")
+                        )
+                        open_brackets -= (
+                            line.count(")") + line.count("]") + line.count("}")
+                        )
+                        f_user.write(line)
+                        # if current line is the end of the variable definition, stop writing
+                        if (
+                            open_brackets == 0
+                            and not line.strip().endswith("\\")
+                            and not line.strip().endswith("(")
+                            and not line.strip().endswith(",")
+                        ):
+                            break
 
 import config_user
 
