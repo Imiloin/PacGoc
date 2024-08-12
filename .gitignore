@@ -3,10 +3,12 @@
 /sample/
 /models/
 /recordings/
+/pacgoc_env/
 .vscode/
 *.code-workspace
 *:Zone.Identifier
 /test*.py
+/pacgoc_env.tar.gz
 
 # logs
 **/lightning_logs/
