@@ -105,13 +105,14 @@ class SourceSeparation:
         )
         self.trainer.test(at_wrapper, dataloaders=avg_loader)
         self.avg_at = at_wrapper.avg_at
-        
+
         # pre-load the model
-        empty_dataset = MusdbDataset(
-            tracks=[]
-        )
+        empty_dataset = MusdbDataset(tracks=[])
         self.model = ZeroShotASP(
-            channels=1, config=self.config, at_model=self.at_model, dataset=empty_dataset
+            channels=1,
+            config=self.config,
+            at_model=self.at_model,
+            dataset=empty_dataset,
         )
         self.model.load_state_dict(self.ckpt["state_dict"], strict=False)
         self.exp_model = SeparatorModel(
@@ -135,10 +136,20 @@ class SourceSeparation:
             audio = audio_data
         if self.sr != SourceSeparation.MODEL_SAMPLE_RATE:
             audio = librosa.resample(
-                audio, orig_sr=self.sr, target_sr=SourceSeparation.MODEL_SAMPLE_RATE, scale=True
+                audio,
+                orig_sr=self.sr,
+                target_sr=SourceSeparation.MODEL_SAMPLE_RATE,
+                scale=True,
             )
         # trim the start silence
         audio = trim_start_silence(audio, threshold=1e-4)  ####### threshold?
+        # pad the audio to the length of 4 seconds
+        if len(audio) < SourceSeparation.MODEL_SAMPLE_RATE * 4:
+            audio = np.pad(
+                audio,
+                (0, SourceSeparation.MODEL_SAMPLE_RATE * 4 - len(audio)),
+                "constant",
+            )
         return audio
 
     def inference(self, audio: np.ndarray):
@@ -164,7 +175,7 @@ class SourceSeparation:
 
     def postprocess(self):
         pass
-    
+
     def __str__(self):
         return os.path.join(self.output_path, self.output_filename)
 

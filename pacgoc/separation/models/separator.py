@@ -106,7 +106,7 @@ class SeparatorModel(pl.LightningModule):
         n_samples = int(batch.shape[-1] / segment_len) * segment_len
         # resize the batch
         batch = batch[:, :n_samples]
-        overlap_size = max(int(self.config.overlap_rate * segment_len), 1)
+        overlap_size = int(self.config.overlap_rate * segment_len)
         mixture = split_nparray_with_overlap(
             batch[0], n_samples // segment_len, overlap_size
         )
