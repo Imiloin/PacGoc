@@ -48,13 +48,12 @@ if not config_user_path.exists():
 else:
     config_vars = extract_vars(config_path)
     user_config_vars = extract_vars(config_user_path)
-    print(config_vars)
-    print(user_config_vars)
 
     missing_vars = config_vars - user_config_vars
 
     # update config_user.py with missing variables from config.py
     if missing_vars:
+        print(f"Adding {len(missing_vars)} missing variables to {config_user_path}")
         # read config.py
         with open(config_path, "r") as f:
             config_content = f.readlines()
