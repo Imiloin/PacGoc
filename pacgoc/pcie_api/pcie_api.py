@@ -12,15 +12,22 @@ class PCIe:
     TIK = INTERVAL / 10  # 接收到无效包时的等待时间，单位为秒
 
     def __init__(self):
+        self._stop_flag = False  # 添加一个停止标志
         self._obj = pcie.PCIE()
         self.audio_data_queue = Queue()
+
+    def stop(self):
+        """
+        设置停止标志，使得接收线程可以安全退出
+        """
+        self._stop_flag = True
 
     def receive(self):
         """
         2ms循环接收数据包，并将数据包中的音频数据添加到队列中
         该函数含有死循环，需要在其他线程中调用
         """
-        while True:
+        while not self._stop_flag:
             start_time = time.time()  # 记录循环开始的时间
 
             self._obj.transfer()
