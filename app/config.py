@@ -3,6 +3,20 @@ import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # -----------------------------------------------------------------------------
+# ON/OFF
+# -----------------------------------------------------------------------------
+
+HARDWARE_CONTROLLER_ON = True
+AUDIO_CLASSIFICATION_ON = True
+SPEAKER_PROFILING_ON = True
+SPEAKER_VERIFICATION_ON = True
+SPOOF_DETECTION_ON = True
+AUTOMATIC_SPEECH_RECOGNITION_ON = True
+ACOUSTIC_NOISE_SUPPRESSION_ON = True
+AUDIO_SOURCE_SEPARATION_ON = True
+LLM_CHAT_ON = True
+
+# -----------------------------------------------------------------------------
 # Recordings
 # -----------------------------------------------------------------------------
 
@@ -18,20 +32,6 @@ password = "admin"
 
 INTERVAL = 10  # running interval, in seconds
 MAX_AUDIO_LEN = 30  # maximum audio length, in seconds
-
-# -----------------------------------------------------------------------------
-# ON/OFF
-# -----------------------------------------------------------------------------
-
-HARDWARE_CONTROLLER_ON = True
-AUDIO_CLASSIFICATION_ON = True
-SPEAKER_PROFILING_ON = True
-SPEAKER_VERIFICATION_ON = True
-SPOOF_DETECTION_ON = True
-AUTOMATIC_SPEECH_RECOGNITION_ON = True
-ACOUSTIC_NOISE_SUPPRESSION_ON = True
-AUDIO_SOURCE_SEPARATION_ON = True
-LLM_CHAT_ON = True
 
 # -----------------------------------------------------------------------------
 # Hardware Controller

@@ -159,6 +159,7 @@ class Qwen2:
                 f"Trimmed input from conversation as it was longer than {Qwen2.MAX_INPUT_TOKEN_LENGTH} tokens."
             )
 
+        # always keep system_inputs at the beginning
         inputs = torch.cat((system_inputs, chat_inputs), dim=1)
         inputs = inputs.to(self.device)
 
