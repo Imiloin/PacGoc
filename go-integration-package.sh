@@ -12,6 +12,9 @@ fi
 script_dir=$(dirname "$0")
 env_dir="$script_dir/pacgoc_env"
 
+# create temporary directories
+sudo -u $SUDO_USER mkdir -p "recordings" "lightning_logs"
+
 # Set the default argument to pcie
 default_source="pcie"
 source=${1:-$default_source}
@@ -45,4 +48,14 @@ fi
 
 # run app
 echo "running app"
-env "PATH=$env_dir/bin:$PATH" "$env_dir/bin/python" app/app.py --source $source
+case $source in
+"pcie")
+    env "PATH=$env_dir/bin:$PATH" "$env_dir/bin/python" app/app.py --source $source
+    ;;
+"speaker")
+    sudo -u $SUDO_USER env "XDG_RUNTIME_DIR=/run/user/1000" "PULSE_RUNTIME_PATH=/run/user/1000/pulse/" "$env_dir/bin/python" app/app.py --source $source
+    ;;
+*)
+    sudo -u $SUDO_USER "$env_dir/bin/python" app/app.py --source $source
+    ;;
+esac
