@@ -3,7 +3,7 @@
 </h1>
 <div align="center">
 
-<!-- <img src="README.assets/header.svg" width="750"></img> -->
+<!-- <img src="README.assets/header.svg" alt="header" style="zoom:80%;></img> -->
 
 <br>
 
@@ -56,6 +56,8 @@
 
 ## Architecture
 
+<img src="README.assets/architecture.svg" alt="architecture"></img>
+
 ## Installation
 
 ### Environment Setup
@@ -66,18 +68,18 @@
 
 首先应确保安装了 [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) 、[cuDNN](https://developer.nvidia.com/cudnn) 及相应的 Nvidia 显卡驱动。本项目的测试版本为 CUDA 11.8 + cuDNN 8.9.7，其他版本的兼容性未知。
 
-安装 [Anaconda](https://www.anaconda.com/download) （推荐）或 [Miniconda](https://docs.anaconda.com/miniconda/)，便于环境配置。
-
 您可能还需要安装一些依赖库：
 
 ```bash
 sudo apt update && sudo apt upgrade
-sudo apt install ffmpeg libsndfile1
+sudo apt install ffmpeg libsndfile1 pulseaudio dbus
 ```
 
 如果您想快速复现比赛中使用的项目，在环境部署完毕后，可以直接查看[使用整合包的方法](#use-the-integration-package)，跳过下面的安装步骤。
 
 ### Install pacgoc package
+
+安装 [Anaconda](https://www.anaconda.com/download) （推荐）或 [Miniconda](https://docs.anaconda.com/miniconda/)，便于环境配置。
 
 创建一个新的 python 3.10 conda 环境并激活：
 
@@ -149,10 +151,20 @@ conda activate pacgoc
 cd pango_pcie && ./run.sh && cd ..
 ```
 
+每次重启上位机后，需要重新装载 PCIe 驱动程序：
+
+```bash
+cd driver && sudo ./run.sh && cd ..
+```
+
 在 Python 中，即可使用 `pacgoc.pcie_api` 模块调用 PCIe 接口。
 
 ```python
+import os
+import wave
+import numpy as np
 import threading
+import time
 from pacgoc.pcie_api import PCIe
 
 def write_wav(data: np.ndarray, frame_rate: int, file_path: os.PathLike):
@@ -178,12 +190,26 @@ source = PCIe()
 th_receive = threading.Thread(target=source.receive, daemon=True)
 th_receive.start()
 
+# wait some time for receiving data
+time.sleep(10)
+
 # get data from PCIe buffer
 print(source.get_queue_size())
 audio_data = source.get_queue_data()
 
 # save audio data to WAV file
 write_wav(audio_data, 48000, "received.wav")
+
+# stop receiving thread
+source.stop()
+th_receive.join()
+```
+
+将上述代码保存为 `test_pcie.py` 并运行，即可接收 PCIe 发送的音频数据并保存为 WAV 文件。凡是涉及到 PCIe 操作，由于驱动原因需要使用 sudo 运行并将用户权限安装的 conda 环境的 bin 目录添加到 PATH 环境变量中。
+
+```bash
+# conda activate pacgoc
+sudo env "PATH=$CONDA_PREFIX/bin:$PATH" python test_pcie.py
 ```
 
 ##### 串口接口
@@ -388,9 +414,7 @@ res = spoof_detector(audio)
 print(res)
 ```
 
-<!-- 更新网盘链接 -->
-
-`spoof_model_root` 为变声检测模型的顶层目录。为了满足赛题要求，变声检测使用了自行微调的 DistilHuBERT 模型，基于硬件部分的变声工具制作数据集。模型的微调方法可以参考 [Hugging Face 的 Audio Course](https://huggingface.co/learn/audio-course/chapter4/fine-tuning#fine-tuning-a-model-for-music-classification)。如果需要，您可以在[夸克网盘](https://https://pan.quark.cn/??????)下载本项目使用的预训练模型，也可以尝试自行微调。
+`spoof_model_root` 为变声检测模型的顶层目录。为了满足赛题要求，变声检测使用了自行微调的 DistilHuBERT 模型，基于硬件部分的变声工具制作数据集。模型的微调方法可以参考 [Hugging Face 的 Audio Course](https://huggingface.co/learn/audio-course/chapter4/fine-tuning#fine-tuning-a-model-for-music-classification)。如果需要，您可以在[夸克网盘](https://pan.quark.cn/s/3c9fecd7b7be)（提取码：di8W）下载本项目使用的预训练模型，也可以尝试自行微调。
 
 ```text
 spoof_detection/
@@ -516,29 +540,54 @@ separation(audio)
 
 `ckpt` 为音频源分离模型的检查点文件，`resume_ckpt` 为声音事件检测系统的检查点文件，可从 [GitHub](https://github.com/RetroCirce/Zero_Shot_Audio_Source_Separation) 下载。
 
-+ `query_folder`: 音频源分离的 query 音频文件目录，应包含一个或多个采样率相同的 WAV 音频文件。
++ `query_folder`: 音频源分离的 query 音频文件目录，应包含一个或多个采样率相同的单声道 WAV 音频文件。
 + `query_sr`: 音频源分离的 query 音频文件采样率。
 + `output_path`: 音频源分离后的音频文件保存目录。
 + `output_filename`: 音频源分离后的音频文件名。
 
 ### Use the Gradio app
 
-> [!IMPORTANT]  
+> [!NOTE]  
 > 如果完全启用所有功能，至少需要 10 GB 的显存，请注意您的硬件配置。
 
 #### 首次运行
 
-首次运行时，您可能需要修改 app 的运行配置。将 `app/config.py` 复制到 `app/config_user.py`，并根据需要修改其中的参数。
+首次运行时，您可能需要修改 app 的运行配置。将 `app/config.py` 复制到 `app/config_user.py`，并根据需要修改 `config_user.py` 中的参数。
 
 ```bash
 cp -i app/config.py app/config_user.py
+# sudo chmod a+w app/config_user.py  # if necessary
 ```
 
-下面对 `config_user.py` 中的部分参数进行介绍：
+下面对 `config_user.py` 中的部分参数进行介绍。其余的参数参照[音频分析&处理模块](#音频分析处理模块)一节应当容易理解其含义，此处不再赘述。
+
+##### ON/OFF
+
+> [!IMPORTANT]  
+> 如果您没有连接相应的 FPGA 开发版或没有使用配套的硬件代码，应将 `HARDWARE_CONTROLLER_ON` 设置为 `False`。
+
++ `HARDWARE_CONTROLLER_ON`：是否启用硬件控制器，使用串口向 FPGA 发送指令。
++ `AUDIO_CLASSIFICATION_ON`：是否启用音频分类功能。
++ `SPEAKER_PROFILING_ON`：是否启用音频人物画像功能。
++ `SPEAKER_VERIFICATION_ON`：是否启用声纹识别功能。
++ `SPOOF_DETECTION_ON`：是否启用变声检测功能。
++ `AUTOMATIC_SPEECH_RECOGNITION_ON`：是否启用自动语音识别功能。
++ `ACOUSTIC_NOISE_SUPPRESSION_ON`：是否启用声学降噪功能。
++ `AUDIO_SOURCE_SEPARATION_ON`：是否启用音频源分离功能。
++ `LLM_CHAT_ON`：是否启用 LLM 聊天功能。
+
+> [!TIP]
+> 在 App 中，本项目在本地部署了一个 [Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct) 语言模型（图一乐），通过 System Prompt + Custom Logits Processor 的方式实现了简单的 LLM 执行指令功能。启用该功能会有较大的显存占用。
 
 ##### Recordings
 
 `recordings_dir`：录音文件存放目录。
+
+##### App
+
++ `share`：是否启用 Gradio 的分享功能，默认关闭。启用后会生成共享链接（显示在控制台中），打开链接时需要输入用户名和密码。首次启用时可能出现无法下载 `frpc_linux_amd64_v0.2` 的报错，请尝试切换网络环境。
++ `INTERVAL`：启动时默认的识别间隔，单位为秒。打开 App 后，会每隔 `INTERVAL` 秒运行一次已 Enable 的功能。该数值在 App 中也可以通过滑块调整。
++ `MAX_AUDIO_LEN`：最大音频时长，单位为秒。用 `Start Listening` 手动指定识别的音频片段时，超过此时长后会自动运行 `End Listening`。
 
 #### 启动 App
 
@@ -551,7 +600,7 @@ conda activate pacgoc
 如果启用了 PCIe 功能，需要装载 PCIe 驱动程序：
 
 ```bash
-cd driver && sudo run.sh && cd ..
+cd driver && sudo ./run.sh && cd ..
 ```
 
 启动 Gradio App：
@@ -560,15 +609,45 @@ cd driver && sudo run.sh && cd ..
 # choose the source you want to use
 # use PCIe source
 sudo env "PATH=$CONDA_PREFIX/bin:$PATH" python app/app.py --source pcie
+
 # use speaker output as source
 python app/app.py --source speaker
+# if you encounter AssertionError error, try the following command
+# env "XDG_RUNTIME_DIR=/run/user/1000" "PULSE_RUNTIME_PATH=/run/user/1000/pulse/" python app/app.py --source speaker
+
 # use WAV file as source
 python app/app.py --source "/path/to/file.wav"
 ```
 
-可以指定音频源，默认将 PCIe 接收的音频数据作为输入（需要使用 sudo），如果未启用 PCIe 功能，可以将电脑的输出音频（扬声器）作为输入或使用 WAV 音频文件模拟流式输入。
+可以指定音频源，默认将 PCIe 接收的音频数据作为输入（需要使用 sudo）。如果没有连接相应的 FPGA 开发版或没有使用配套的硬件代码，也可以将电脑的输出音频（扬声器）作为输入或使用 WAV 音频文件模拟流式输入。
 
 ## Use the integration package
+
+您可以从[百度网盘](https://pan.baidu.com/s/1ojf-7e-r-iW3LrQEXi_jOg)（提取码：zdk4）下载本项目的整合包，在[环境部署](#environment-setup)完成后可以解压即用。
+
+解压整合包：
+
+```bash
+cat pacgoc-integration-package.tar.part-* > pacgoc-integration-package.tar
+tar -xvf pacgoc-integration-package.tar
+cd PacGoc
+```
+
+运行启动脚本：
+
+```bash
+chmod a+x go-integration-package.sh
+sudo ./go-integration-package.sh pcie
+```
+
+如果没有连接相应的 FPGA 开发版或没有使用配套的硬件代码，类似于[启动 App](#启动-app)一节，可以使用其他音频源：
+
+```bash
+# use speaker output as source
+sudo ./go-integration-package.sh speaker
+# use WAV file as source
+sudo ./go-integration-package.sh "/path/to/file.wav"
+```
 
 ## FAQ
 
@@ -580,7 +659,7 @@ python app/app.py --source "/path/to/file.wav"
 
 PCIe 模块使用了 Linux 版本的驱动，无法在 Windows 上使用。串口模块需要在安装 [Windows 驱动](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads)后应当可以使用。除此以外，`pacgoc` 包中的其他功能理论上可以在 Windows 上使用，但未经过详细的测试。
 
-Gradio App 在关闭 `HARDWARE_CONTROLLER` 选项后并指定音频源为系统输出音频或 WAV 文件时理论上可以在 Windows 上运行，但未经过详细的测试。
+Gradio App 在关闭 `HARDWARE_CONTROLLER_ON` 选项后并指定音频源为系统输出音频或 WAV 文件时理论上可以在 Windows 上运行，但未经过详细的测试。
 
 ### Logo 有什么设计内涵？
 
