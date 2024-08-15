@@ -1212,6 +1212,30 @@ with gr.Blocks(css=css) as demo:
                 every=1,
                 show_progress=False,
             )
+            if config_user.HARDWARE_CONTROLLER_ON:
+                with gr.Row():
+                    tm_up_btn = gr.Button("Pitch Up", elem_id="skyblue")
+                    tm_down_btn = gr.Button("Pitch Down", elem_id="mistyrose")
+                    tm_up_btn.click(
+                        tm_up,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                    tm_down_btn.click(
+                        tm_down,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
+                with gr.Row():
+                    tm_off_btn = gr.Button("Turn Off")
+                    tm_off_btn.click(
+                        tm_off,
+                        inputs=None,
+                        outputs=None,
+                        show_progress="hidden",
+                    )
             with gr.Row(equal_height=False):
                 start_btn = gr.Button("Start listening", scale=3.5)
                 end_btn = gr.Button("End listening", scale=3.5)
