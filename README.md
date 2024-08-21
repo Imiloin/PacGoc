@@ -33,19 +33,19 @@
 
 + `ans`：Acoustic Noise Suppression，声学降噪模块
 + `cls`：Audio Classification，音频分类模块
-+ `pcie_api`：PCIe API，PCIe 接收数据模块
++ `pcie_api`：PCIe API，PCIe 数据接收模块
 + `profiling`：Speaker Profiling，音频人物画像模块
-    + `age_gender`：Age and Gender Prediction，预测年龄性别模块
+    + `age_gender`：Age and Gender Prediction，年龄性别预测模块
     + `emotion`：Emotion Recognition，情感识别模块
 + `readwav`：Read WAV，流式读取 WAV 文件模块
-+ `record`：Record，录音模块
++ `record`：Audio Recording，录音模块
 + `separation`：Audio Source Separation，音频源分离模块
 + `serial_api`：Serial API，串口通信模块
 + `spoof`：Spoof Detection，变声检测模块
 + `sv`：Speaker Verification，声纹识别模块
 + `utils`：Utilities，工具函数模块
 
-项目使用 Python 语言编写。`pcie_api` 和 `serial_api` 模块须配合紫光同创盘古-50开发板（MES50HP）以及相应的硬件代码使用，其他模块可在普通 PC 上运行。
+项目使用 Python 语言编写。`pcie_api` 和 `serial_api` 模块须配合紫光同创盘古-50开发板（MES50HP）以及相应的硬件代码使用，其他模块可脱离开发板使用。
 
 本项目还提供了比赛中使用的 Gradio Web 界面代码，保存在 `app` 目录下，用于统一展示项目的功能。
 
@@ -140,11 +140,11 @@ pip install -r requirements_app.txt
 
 ##### PCIe 接口
 
-在 FPGA 端，音频数据通过 PMOD 接收为单通道 48000 Hz 采样率的 int16 PCM 格式，并整理为数据包的格式通过 PCIe 发送到 PC 端。在 PC 端，通过 PCIe 接口接收数据包，解析音频数据。
+在 FPGA 端，音频数据通过 PMOD 接收为单通道 48000 Hz 采样率的 int16 PCM 格式，并整理为数据包的格式通过 PCIe 发送到 PC 端。在 PC 端，从 PCIe 接口接收数据包，解析音频数据。
 
-数据包为 8 个包头数据 + 128 个音频数据的格式，包头数据设置为 0xAAAA。相关设置可以在 `pango_pcie/includes/audio.h` 中查看和修改。数据包的发送方式请查看硬件部分的代码。
+数据包为 8 个包头数据 + 128 个音频数据的格式，有效包头数据设置为 0xAAAA，相关设置可以在 `pango_pcie/includes/audio.h` 中查看和修改。若收到的包头数据不是设定的包头，则认定为无效数据包。数据包的发送方式请查看硬件部分的代码。
 
-项目使用了 pybind11 封装了 PCIe 接口，可以在 Python 中调用，相关的 C 代码保存在 `pango_pcie` 目录下，需要进行编译并移动编译得到的 `so` 文件到 `pacgoc/pcie_api` 目录下。
+项目使用了 pybind11 封装了 PCIe 接口，可以在 Python 中调用，将音频数据直接读取为 `numpy.ndarray` 格式。相关的 C 代码保存在 `pango_pcie` 目录下，需要进行编译并移动编译得到的 `so` 文件到 `pacgoc/pcie_api` 目录下。
 
 ```bash
 # activate the previously created environment
@@ -266,7 +266,7 @@ import torchaudio
 audio, sr = torchaudio.load(audio_file)
 ```
 
-待读取的 WAV 音频数据应为单声道（mono）格式，同时采样率最好大于 16 kHz。可以使用 `ffmpeg` 工具将音频文件转换为符合要求的格式：
+待读取的 WAV 音频数据应为单声道（mono）格式，同时采样率最好大于或等于 16 kHz。可以使用 `ffmpeg` 工具将音频文件转换为符合要求的格式：
 
 ```bash
 ffmpeg -i input.mp3 -ac 1 -ar 16000 output.wav
@@ -391,7 +391,7 @@ speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common/
 
 关于其他参数，`threshold` 为声纹识别的阈值，应为 0 到 1 之间的浮点数。
 
-`enroll_embeddings` 为注册的声纹特征向量保存得到的 JSON 文件，`enroll_audio_dir` 为注册的音频文件目录。`enroll_audio_dir` 中应保存一个或多个单声道采样率为 16 kHz 的 WAV 音频文件。
+`enroll_embeddings` 为注册的声纹特征向量保存得到的 JSON 文件，`enroll_audio_dir` 为注册的音频文件目录。`enroll_audio_dir` 中应保存一个或多个采样率为 16 kHz 的单声道 WAV 音频文件。
 
 + 若二者同时指定，将为 `enroll_audio_dir` 中的每一个音频文件生成特征向量，并保存在指定的 `enroll_embeddings` 中存储为 JSON 文件，音频文件的文件名将作为键，特征向量作为值。
 + 当仅指定 `enroll_audio_dir` 时，将为 `enroll_audio_dir` 中的每一个音频文件生成特征向量，调用时直接使用这些特征向量进行声纹识别，不进行保存。
@@ -549,7 +549,7 @@ separation(audio)
 ### Use the Gradio app
 
 > [!NOTE]  
-> 如果完全启用所有功能，至少需要 10 GB 的显存，请注意您的硬件配置。
+> 如果完全启用所有功能，需要约 10 GB 的显存，请注意您的硬件配置。
 
 #### 首次运行
 
@@ -587,7 +587,7 @@ cp -i app/config.py app/config_user.py
 ##### App
 
 + `share`：是否启用 Gradio 的分享功能，默认关闭。启用后会生成共享链接（显示在控制台中），打开链接时需要输入用户名和密码。首次启用时可能出现无法下载 `frpc_linux_amd64_v0.2` 的报错，请尝试切换网络环境。
-+ `INTERVAL`：启动时默认的识别间隔，单位为秒。打开 App 后，会每隔 `INTERVAL` 秒运行一次已 Enable 的功能。该数值在 App 中也可以通过滑块调整。
++ `INTERVAL`：启动时默认的识别间隔，单位为秒。打开 App 后，默认会每隔 `INTERVAL` 秒运行一次已 Enable 的功能。该数值在 App 中也可以通过滑块调整。
 + `MAX_AUDIO_LEN`：最大音频时长，单位为秒。用 `Start Listening` 手动指定识别的音频片段时，超过此时长后会自动运行 `End Listening`。
 
 #### 启动 App
@@ -608,6 +608,7 @@ cd driver && sudo ./run.sh && cd ..
 
 ```bash
 # choose the source you want to use
+
 # use PCIe source
 sudo env "PATH=$CONDA_PREFIX/bin:$PATH" python app/app.py --source pcie
 
@@ -624,7 +625,7 @@ python app/app.py --source "/path/to/file.wav"
 
 ## Use the integration package
 
-您可以从[百度网盘](https://pan.baidu.com/s/1ojf-7e-r-iW3LrQEXi_jOg)（提取码：zdk4）下载本项目的整合包，在[环境部署](#environment-setup)完成后可以解压即用。
+您可以从[百度网盘](https://pan.baidu.com/s/1ojf-7e-r-iW3LrQEXi_jOg)（提取码：zdk4）下载本项目的整合包，在[环境依赖部署](#environment-setup)完成后可以解压即用。
 
 解压整合包：
 
