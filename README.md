@@ -3,7 +3,7 @@
 </h1>
 <div align="center">
 
-<!-- <img src="README.assets/header.svg" alt="header" style="zoom:80%;></img> -->
+<img src="README.assets/header.svg" alt="header" width="800"></img>
 
 <br>
 
@@ -27,12 +27,12 @@
 
 ## Introduction
 
-**PacGoc** 是 2024 年第八届全国大学生集成电路创新创业大赛紫光同创杯的全国(?)等奖作品。本项目包含了上位机部分（PC 端）使用的代码。
+**PacGoc** 是 2024 年第八届全国大学生集成电路创新创业大赛紫光同创杯的企业大奖获奖作品。本项目包含了上位机部分（PC 端）使用的代码。
 
-本项目构建了 Python 软件包 `pacgoc`，包含以下子模块：
+项目构建了 Python 软件包 `pacgoc`，包含以下子模块：
 
 + `ans`：Acoustic Noise Suppression，声学降噪模块
-+ `cls`：Classification，音频分类模块
++ `cls`：Audio Classification，音频分类模块
 + `pcie_api`：PCIe API，PCIe 接收数据模块
 + `profiling`：Speaker Profiling，音频人物画像模块
     + `age_gender`：Age and Gender Prediction，预测年龄性别模块
@@ -53,6 +53,7 @@
 
 + 2024/06/25 本项目在初赛晋级 💪
 + 2024/07/28 本项目获得华东赛区分赛区决赛一等奖 🔥
++ 2024/08/21 本项目获得全国总决赛企业大奖 🏆
 
 ## Architecture
 
@@ -63,7 +64,7 @@
 ### Environment Setup
 
 > [!NOTE]
-> 本项目的硬件配置为 Intel Core i5-12400F 处理器、NVIDIA GeForce RTX 3060 12 GB 显卡。<br>
+> 本项目的硬件配置为 Intel Core i5-12400F 处理器、16 GB 内存、NVIDIA GeForce RTX 3060 12 GB 显卡。<br>
 > 测试环境为 Ubuntu 20.04 + CUDA 11.8 + cuDNN 8.9.7 + Python 3.10 + PyTorch 2.3.0 + TensorFlow 2.16.1。
 
 首先应确保安装了 [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) 、[cuDNN](https://developer.nvidia.com/cudnn) 及相应的 Nvidia 显卡驱动。本项目的测试版本为 CUDA 11.8 + cuDNN 8.9.7，其他版本的兼容性未知。
@@ -75,7 +76,7 @@ sudo apt update && sudo apt upgrade
 sudo apt install ffmpeg libsndfile1 pulseaudio dbus
 ```
 
-如果您想快速复现比赛中使用的项目，在环境部署完毕后，可以直接查看[使用整合包的方法](#use-the-integration-package)，跳过下面的安装步骤。
+如果您想快速复现比赛中使用的项目，在上述环境依赖部署完毕后，可以直接查看[使用整合包的方法](#use-the-integration-package)，跳过下面的安装步骤。
 
 ### Install pacgoc package
 
