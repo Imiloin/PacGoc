@@ -54,6 +54,7 @@
 + 2024/06/25 本项目在初赛晋级 💪
 + 2024/07/28 本项目获得华东赛区分赛区决赛一等奖 🔥
 + 2024/08/21 本项目获得全国总决赛企业大奖 🏆
++ 2024/08/22 本项目在 [GitHub](https://github.com/Imiloin/PacGoc) 上开源 🎉
 
 ## Architecture
 
@@ -142,13 +143,12 @@ pip install -r requirements_app.txt
 
 在 FPGA 端，音频数据通过 PMOD 接收为单通道 48000 Hz 采样率的 int16 PCM 格式，并整理为数据包的格式通过 PCIe 发送到 PC 端。在 PC 端，从 PCIe 接口接收数据包，解析音频数据。
 
-数据包为 8 个包头数据 + 128 个音频数据的格式，有效包头数据设置为 0xAAAA，相关设置可以在 `pango_pcie/includes/audio.h` 中查看和修改。若收到的包头数据不是设定的包头，则认定为无效数据包。数据包的发送方式请查看硬件部分的代码。
+数据包为 8 个包头数据 + 128 个音频数据的格式，有效包头数据设置为 0xAAAA，相关设置可以在 `pango_pcie/includes/audio.h` 中查看和修改。若收到的数据包没有有效包头，则认定为无效数据包。数据包的发送方式请查看硬件部分的代码。
 
-项目使用了 pybind11 封装了 PCIe 接口，可以在 Python 中调用，将音频数据直接读取为 `numpy.ndarray` 格式。相关的 C 代码保存在 `pango_pcie` 目录下，需要进行编译并移动编译得到的 `so` 文件到 `pacgoc/pcie_api` 目录下。
+项目使用了 pybind11 封装了 PCIe 接口，可以在 Python 中调用，将音频数据直接读取为 `numpy.ndarray` 格式。相关的 C 代码保存在 `pango_pcie/` 目录下，需要进行编译并移动编译得到的 `so` 文件到 `pacgoc/pcie_api` 目录下。
 
 ```bash
-# activate the previously created environment
-conda activate pacgoc
+conda activate pacgoc  # activate the previously created environment
 cd pango_pcie && ./run.sh && cd ..
 ```
 
@@ -250,7 +250,7 @@ if not state:
 
 `pacgoc` 包的功能模块均提供了 `__call__` 方法，支持输入 `float32` 或 `int16` 类型的 `numpy.ndarray` 格式数据。
 
-对于 WAV 音频文件，可以使用 `librosa` 或 `torchaudio` 库读取：
+对于 WAV 音频文件，可以使用 `librosa` 或 `torchaudio` 库读取为 \[-1, 1\) 的 `float32` 格式 `numpy.ndarray` ：
 
 ```python
 audio_file = "<path_to_wav_file>"  # should be a mono wav file
@@ -391,7 +391,7 @@ speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common/
 
 关于其他参数，`threshold` 为声纹识别的阈值，应为 0 到 1 之间的浮点数。
 
-`enroll_embeddings` 为注册的声纹特征向量保存得到的 JSON 文件，`enroll_audio_dir` 为注册的音频文件目录。`enroll_audio_dir` 中应保存一个或多个采样率为 16 kHz 的单声道 WAV 音频文件。
+`enroll_embeddings` 为注册的声纹特征向量保存得到的 JSON 文件，`enroll_audio_dir` 为注册的音频文件目录（应保存一个或多个采样率为 16 kHz 的单声道 WAV 音频文件）。
 
 + 若二者同时指定，将为 `enroll_audio_dir` 中的每一个音频文件生成特征向量，并保存在指定的 `enroll_embeddings` 中存储为 JSON 文件，音频文件的文件名将作为键，特征向量作为值。
 + 当仅指定 `enroll_audio_dir` 时，将为 `enroll_audio_dir` 中的每一个音频文件生成特征向量，调用时直接使用这些特征向量进行声纹识别，不进行保存。
@@ -557,7 +557,7 @@ separation(audio)
 
 ```bash
 cp -i app/config.py app/config_user.py
-# sudo chmod a+w app/config_user.py  # if necessary
+# sudo chmod 777 app/config_user.py  # if necessary
 ```
 
 下面对 `config_user.py` 中的部分参数进行介绍。其余的参数参照[音频分析&处理模块](#音频分析处理模块)一节应当容易理解其含义，此处不再赘述。
@@ -567,7 +567,7 @@ cp -i app/config.py app/config_user.py
 > [!IMPORTANT]  
 > 如果您没有连接相应的 FPGA 开发版或没有使用配套的硬件代码，应将 `HARDWARE_CONTROLLER_ON` 设置为 `False`。
 
-+ `HARDWARE_CONTROLLER_ON`：是否启用硬件控制器，使用串口向 FPGA 发送指令。
++ `HARDWARE_CONTROLLER_ON`：是否启用硬件控制器（使用串口向 FPGA 发送指令）。
 + `AUDIO_CLASSIFICATION_ON`：是否启用音频分类功能。
 + `SPEAKER_PROFILING_ON`：是否启用音频人物画像功能。
 + `SPEAKER_VERIFICATION_ON`：是否启用声纹识别功能。
@@ -607,7 +607,7 @@ cd driver && sudo ./run.sh && cd ..
 启动 Gradio App：
 
 ```bash
-# choose the source you want to use
+## choose the source you want to use ##
 
 # use PCIe source
 sudo env "PATH=$CONDA_PREFIX/bin:$PATH" python app/app.py --source pcie
@@ -659,7 +659,7 @@ sudo ./go-integration-package.sh "/path/to/file.wav"
 
 ### 能在 Windows 上运行吗？
 
-PCIe 模块使用了 Linux 版本的驱动，无法在 Windows 上使用。串口模块需要在安装 [Windows 驱动](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads)后应当可以使用。除此以外，`pacgoc` 包中的其他功能理论上可以在 Windows 上使用，但未经过详细的测试。
+PCIe 模块使用了 Linux 版本的驱动，无法在 Windows 上使用。串口模块在安装 [Windows 驱动](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads)后应当可以使用。除此以外，`pacgoc` 包中的其他功能理论上可以在 Windows 上使用，但未经过详细的测试。
 
 Gradio App 在关闭 `HARDWARE_CONTROLLER_ON` 选项后并指定音频源为系统输出音频或 WAV 文件时理论上可以在 Windows 上运行，但未经过详细的测试。
 
