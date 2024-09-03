@@ -635,6 +635,10 @@ tar -xvf pacgoc-integration-package.tar
 cd PacGoc
 ```
 
+> [!WARNING]
+> 整合包预装的 PyTorch 对应的 CUDA 版本为 11.8。如果您的 CUDA 版本不同，可能需要重新安装 PyTorch。<br>
+> 使用 `source "pacgoc_env/bin/activate"` 激活整合包环境，然后访问 [PyTorch 官网](https://pytorch.org/get-started/locally/) 获取相应 CUDA 版本的 PyTorch 安装命令并执行。
+
 运行启动脚本：
 
 ```bash

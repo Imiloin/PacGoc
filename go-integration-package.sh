@@ -22,7 +22,7 @@ source=${1:-$default_source}
 # extract pacgoc_env from pacgoc_env.tar.gz
 if [ ! -d "pacgoc_env" ]; then
     sudo -u $SUDO_USER mkdir -p "$env_dir"
-    echo "extracting pacgoc_env.tar.gz to $env_dir"
+    echo "Extracting pacgoc_env.tar.gz to $env_dir"
     sudo -u $SUDO_USER tar -xzf pacgoc_env.tar.gz -C "$env_dir"
 else
     echo "pacgoc_env already exists, skipping extraction"
@@ -33,9 +33,20 @@ sudo -u $SUDO_USER bash -c "source '$env_dir/bin/activate' && \
     if pip list | grep 'pacgoc'; then \
         echo 'pacgoc package is already installed'; \
     else \
-        echo 'installing pacgoc package'; \
+        echo 'Installing pacgoc package'; \
         pip install -e .; \
     fi"
+
+# check if CUDA is available
+cuda_available=$(sudo -u $SUDO_USER bash -c "source '$env_dir/bin/activate' && python -c 'import torch; print(torch.cuda.is_available())'")
+
+if [ "$cuda_available" = "True" ]; then
+    echo "CUDA is available"
+else
+    echo "CUDA is not available, check if CUDA is installed"
+    echo "If your CUDA version is not 11.8, please re-install pytorch with your CUDA version manually"
+    echo "Exits..."
+fi
 
 # compile pango_pcie into shared object
 sudo -u $SUDO_USER bash -c "source '$env_dir/bin/activate' && \
@@ -47,7 +58,7 @@ if [ "$source" = "pcie" ]; then
 fi
 
 # run app
-echo "running app"
+echo "Running app..."
 case $source in
 "pcie")
     env "PATH=$env_dir/bin:$PATH" "$env_dir/bin/python" app/app.py --source $source
