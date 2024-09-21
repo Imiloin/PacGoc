@@ -2,5 +2,6 @@
     "recommendations": [
         "ms-python.python",
         "ms-python.black-formatter",
+        "DavidAnson.vscode-markdownlint",
     ]
 }
