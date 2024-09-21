@@ -168,6 +168,7 @@ import threading
 import time
 from pacgoc.pcie_api import PCIe
 
+
 def write_wav(data: np.ndarray, frame_rate: int, file_path: os.PathLike):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     # pls make sure data is int16
@@ -185,6 +186,7 @@ def write_wav(data: np.ndarray, frame_rate: int, file_path: os.PathLike):
 
         # write data to file
         wav_file.writeframes(data.tobytes())
+
 
 # create PCIe receiving thread
 source = PCIe()
