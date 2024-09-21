@@ -4,18 +4,21 @@
 /models/
 /recordings/
 /pacgoc_env/
-.vscode/
 *.code-workspace
 *:Zone.Identifier
 /test*.py
 /pacgoc_env.tar.gz
+
+# VS Code
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
 
 # logs
 **/lightning_logs/
 
 # config
 config_user.py
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

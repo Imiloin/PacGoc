@@ -14,7 +14,7 @@ setup(
     name="pacgoc",
     version="0.1.0",
     author="Imiloin",
-    url="https://github.com/Imiloin/pacgoc",
+    url="https://github.com/Imiloin/PacGoc",
     license="GPL-3.0",
     description="An audio analysis and processing toolbox",
     long_description=long_description,
