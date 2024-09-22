@@ -3,7 +3,7 @@
 </h1>
 <div align="center">
 
-<img src="README.assets/header.svg" alt="header" width="800"></img>
+<img src="README.assets/winner.svg" alt="winner" width="800"></img>
 
 <br>
 
