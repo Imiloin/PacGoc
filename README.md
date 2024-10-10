@@ -5,7 +5,7 @@
 
 <img src="README.assets/winner.svg" alt="winner" width="800"></img>
 
-<br>
+<br/>
 
 <p>
 <a href="https://github.com/Imiloin/PacGoc"><img alt="Github Repository" src="https://img.shields.io/badge/Github-Repository-green?style=for-the-badge&logo=github&logoColor=green"></img></a>
@@ -17,7 +17,7 @@
 <img alt="license" src="https://img.shields.io/badge/LICENSE-GPL--3.0-yellow?style=for-the-badge&color=yellow&logo=googleslides&logoColor=yellow"></img></a>
 </p>
 
-<br>
+<br/>
 
 <p>
 如果本项目对您有帮助，不要忘记给它一个 ⭐️ 哦！
@@ -32,6 +32,7 @@
 项目构建了 Python 软件包 `pacgoc`，包含以下子模块：
 
 + `ans`：Acoustic Noise Suppression，声学降噪模块
++ `asr`：Automatic Speech Recognition，自动语音识别模块
 + `cls`：Audio Classification，音频分类模块
 + `pcie_api`：PCIe API，PCIe 数据接收模块
 + `profiling`：Speaker Profiling，音频人物画像模块
@@ -65,8 +66,8 @@
 ### Environment Setup
 
 > [!NOTE]
-> 本项目的硬件配置为 Intel Core i5-12400F 处理器、16 GB 内存、NVIDIA GeForce RTX 3060 12 GB 显卡。<br>
-> 测试环境为 Ubuntu 20.04 + CUDA 11.8 + cuDNN 8.9.7 + Python 3.10 + PyTorch 2.3.0 + TensorFlow 2.16.1。
+> 本项目的硬件配置为 Intel Core i5-12400F 处理器、16 GB 内存、NVIDIA GeForce RTX 3060 12 GB 显卡。<br/>
+> 测试环境为 Ubuntu 20.04 + CUDA 11.8 + cuDNN 8.9.7 + Python 3.10 + PyTorch 2.3.0。
 
 首先应确保安装了 [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) 、[cuDNN](https://developer.nvidia.com/cudnn) 及相应的 Nvidia 显卡驱动。本项目的测试版本为 CUDA 11.8 + cuDNN 8.9.7，其他版本的兼容性未知。
 
@@ -129,7 +130,8 @@ pip install -e .
 pip install -r requirements_app.txt
 ```
 
-由于 [Gradio 的 issue #8160](https://github.com/gradio-app/gradio/issues/8160)，本项目使用的是 Gradio 4.16.0 版本。在此 issue 解决前，不建议使用较新的版本。
+由于 [Gradio 的 issue #8160](https://github.com/gradio-app/gradio/issues/8160)，本项目使用的是 Gradio 4.16.0 版本。在此 issue 解决前，不建议使用较新的版本。<br/>
+Update: Gradio 5.0 已经发布，修复了此问题。
 
 ## Usage
 
@@ -638,7 +640,7 @@ cd PacGoc
 ```
 
 > [!WARNING]
-> 整合包预装的 PyTorch 对应的 CUDA 版本为 11.8。如果您的 CUDA 版本不同，可能需要重新安装 PyTorch。<br>
+> 整合包预装的 PyTorch 对应的 CUDA 版本为 11.8。如果您的 CUDA 版本不同，可能需要重新安装 PyTorch。<br/>
 > 使用 `source "pacgoc_env/bin/activate"` 激活整合包环境，然后访问 [PyTorch 官网](https://pytorch.org/get-started/locally/) 获取相应 CUDA 版本的 PyTorch 安装命令并执行。
 
 运行启动脚本：

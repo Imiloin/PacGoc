@@ -7,6 +7,9 @@
         "source.fixAll": "explicit",
         "source.organizeImports": "explicit"
     },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
     "python.analysis.typeCheckingMode": "off",
     "python.analysis.autoImportCompletions": true,
 }
