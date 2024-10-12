@@ -8,9 +8,10 @@
 <br/>
 
 <p>
-<a href="https://github.com/Imiloin/PacGoc"><img alt="Github Repository" src="https://img.shields.io/badge/Github-Repository-green?style=for-the-badge&logo=github&logoColor=green"></img></a>
+<a href="https://github.com/Imiloin/PacGoc">
+<img alt="Github Repository" src="https://img.shields.io/badge/Github-Repository-green?style=for-the-badge&logo=github&logoColor=green"></img></a>
 <a href="https://github.com/Imiloin/PacGoc/stargazers">
-<img alt="stars" src="https://img.shields.io/github/stars/Imiloin/PacGoc?style=for-the-badge&color=orange&logo=apachespark&logoColor=red"></img></a>
+<img alt="stars" src="https://img.shields.io/github/stars/Imiloin/PacGoc?style=for-the-badge&color=orange&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNiAzNiI+PHBhdGggZmlsbD0iI0ZGQUMzMyIgZD0iTTI3LjI4NyAzNC42MjdjLS40MDQgMC0uODA2LS4xMjQtMS4xNTItLjM3MUwxOCAyOC40MjJsLTguMTM1IDUuODM0YTEuOTcgMS45NyAwIDAgMS0yLjMxMi0uMDA4IDEuOTcgMS45NyAwIDAgMS0uNzIxLTIuMTk0bDMuMDM0LTkuNzkyLTguMDYyLTUuNjgxYTEuOTggMS45OCAwIDAgMS0uNzA4LTIuMjAzIDEuOTggMS45OCAwIDAgMSAxLjg2Ni0xLjM2M0wxMi45NDcgMTNsMy4xNzktOS41NDlhMS45NzYgMS45NzYgMCAwIDEgMy43NDkgMEwyMyAxM2wxMC4wMzYuMDE1YTEuOTc1IDEuOTc1IDAgMCAxIDEuMTU5IDMuNTY2bC04LjA2MiA1LjY4MSAzLjAzNCA5Ljc5MmExLjk3IDEuOTcgMCAwIDEtLjcyIDIuMTk0IDEuOTYgMS45NiAwIDAgMS0xLjE2LjM3OSIvPjwvc3ZnPg=="></img></a>
 <a href="https://www.python.org/">
 <img alt="python" src="https://img.shields.io/badge/Python-%3E%3D3.10-blue?style=for-the-badge&color=blue&logo=Python&logoColor=blue"></img></a>
 <a href="https://github.com/Imiloin/PacGoc?tab=GPL-3.0-1-ov-file#readme">
@@ -82,7 +83,7 @@ sudo apt install ffmpeg libsndfile1 pulseaudio dbus
 
 ### Install pacgoc package
 
-安装 [Anaconda](https://www.anaconda.com/download) （推荐）或 [Miniconda](https://docs.anaconda.com/miniconda/)，便于环境配置。
+安装 [Anaconda](https://www.anaconda.com/download) 或 [Miniconda](https://docs.anaconda.com/miniconda/)，便于环境配置。
 
 创建一个新的 python 3.10 conda 环境并激活：
 
@@ -278,6 +279,8 @@ ffmpeg -i input.mp3 -ac 1 -ar 16000 output.wav
 
 ##### 音频分类
 
+<details><summary>Click to Expand</summary>
+
 ```python
 from pacgoc.cls import CLS
 
@@ -305,7 +308,11 @@ ced-base/
 └── preprocessor_config.json
 ```
 
+</details>
+
 ##### 音频人物画像
+
+<details><summary>Click to Expand</summary>
 
 ```python
 from pacgoc.profiling import AgeGender
@@ -347,14 +354,16 @@ emotion2vec_plus_large/
 ├── configuration.json
 ├── emotion2vec+data.png
 ├── emotion2vec+radar.png
-├── example
-│   └── test.wav
 ├── logo.png
 ├── model.pt
 └── tokens.txt
 ```
 
+</details>
+
 ##### 声纹识别
+
+<details><summary>Click to Expand</summary>
 
 ```python
 from pacgoc.sv import Vector
@@ -383,10 +392,6 @@ print(res)
 speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common/
 ├── README.md
 ├── configuration.json
-├── examples
-│   ├── speaker1_a_cn_16k.wav
-│   ├── speaker1_b_cn_16k.wav
-│   └── speaker2_a_cn_16k.wav
 ├── images
 │   ├── ERes2NetV2.png
 │   └── ding.png
@@ -401,7 +406,11 @@ speech_eres2netv2w24s4ep4_sv_zh-cn_16k-common/
 + 当仅指定 `enroll_audio_dir` 时，将为 `enroll_audio_dir` 中的每一个音频文件生成特征向量，调用时直接使用这些特征向量进行声纹识别，不进行保存。
 + 当仅指定 `enroll_embeddings` 时，调用时将读取其中的特征向量进行声纹识别。
 
+</details>
+
 ##### 变声检测
+
+<details><summary>Click to Expand</summary>
 
 ```python
 from pacgoc.spoof import SpoofDetector
@@ -434,7 +443,11 @@ spoof_detection/
     └── preprocessor_config.json
 ```
 
+</details>
+
 ##### 自动语音识别
+
+<details><summary>Click to Expand</summary>
 
 ```python
 from pacgoc.asr import ASR
@@ -461,23 +474,14 @@ SenseVoiceSmall/
 ├── chn_jpn_yue_eng_ko_spectok.bpe.model
 ├── config.yaml
 ├── configuration.json
-├── example
-│   ├── en.mp3
-│   ├── ja.mp3
-│   ├── ko.mp3
-│   ├── yue.mp3
-│   └── zh.mp3
-├── fig
-│   ├── aed_figure.png
-│   ├── asr_results.png
-│   ├── inference.png
-│   ├── sensevoice.png
-│   ├── ser_figure.png
-│   └── ser_table.png
 └── model.pt
 ```
 
+</details>
+
 ##### 音频去噪
+
+<details><summary>Click to Expand</summary>
 
 ```python
 from pacgoc.ans import ANS
@@ -507,16 +511,17 @@ speech_frcrn_ans_cirm_16k/
 ├── description
 │   ├── matrix.png
 │   └── model.png
-├── examples
-│   ├── speech_with_noise.wav
-│   └── speech_with_noise1.wav
 ├── faq.md
 └── pytorch_model.bin
 ```
 
 关于其他参数，`output_path` 为去噪后的音频文件保存目录，`output_filename` 为去噪后的音频文件名。
 
+</details>
+
 ##### 音频源分离
+
+<details><summary>Click to Expand</summary>
 
 ```python
 from pacgoc.separation import SourceSeparation
@@ -549,6 +554,8 @@ separation(audio)
 + `query_sr`: 音频源分离的 query 音频文件采样率。
 + `output_path`: 音频源分离后的音频文件保存目录。
 + `output_filename`: 音频源分离后的音频文件名。
+
+</details>
 
 ### Use the Gradio app
 
