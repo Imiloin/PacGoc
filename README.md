@@ -11,11 +11,11 @@
 <a href="https://github.com/Imiloin/PacGoc">
 <img alt="Github Repository" src="https://img.shields.io/badge/Github-Repository-green?style=for-the-badge&logo=github&logoColor=green"></img></a>
 <a href="https://github.com/Imiloin/PacGoc/stargazers">
-<img alt="stars" src="https://img.shields.io/github/stars/Imiloin/PacGoc?style=for-the-badge&color=orange&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNiAzNiI+PHBhdGggZmlsbD0iI0ZGQUMzMyIgZD0iTTI3LjI4NyAzNC42MjdjLS40MDQgMC0uODA2LS4xMjQtMS4xNTItLjM3MUwxOCAyOC40MjJsLTguMTM1IDUuODM0YTEuOTcgMS45NyAwIDAgMS0yLjMxMi0uMDA4IDEuOTcgMS45NyAwIDAgMS0uNzIxLTIuMTk0bDMuMDM0LTkuNzkyLTguMDYyLTUuNjgxYTEuOTggMS45OCAwIDAgMS0uNzA4LTIuMjAzIDEuOTggMS45OCAwIDAgMSAxLjg2Ni0xLjM2M0wxMi45NDcgMTNsMy4xNzktOS41NDlhMS45NzYgMS45NzYgMCAwIDEgMy43NDkgMEwyMyAxM2wxMC4wMzYuMDE1YTEuOTc1IDEuOTc1IDAgMCAxIDEuMTU5IDMuNTY2bC04LjA2MiA1LjY4MSAzLjAzNCA5Ljc5MmExLjk3IDEuOTcgMCAwIDEtLjcyIDIuMTk0IDEuOTYgMS45NiAwIDAgMS0xLjE2LjM3OSIvPjwvc3ZnPg=="></img></a>
+<img alt="stars" src="https://img.shields.io/github/stars/Imiloin/PacGoc?style=for-the-badge&color=orange&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNiAzNiI+PHBhdGggZmlsbD0iI2ZlN2QzNyIgZD0iTTI3LjI4NyAzNC42MjdjLS40MDQgMC0uODA2LS4xMjQtMS4xNTItLjM3MUwxOCAyOC40MjJsLTguMTM1IDUuODM0YTEuOTcgMS45NyAwIDAgMS0yLjMxMi0uMDA4IDEuOTcgMS45NyAwIDAgMS0uNzIxLTIuMTk0bDMuMDM0LTkuNzkyLTguMDYyLTUuNjgxYTEuOTggMS45OCAwIDAgMS0uNzA4LTIuMjAzIDEuOTggMS45OCAwIDAgMSAxLjg2Ni0xLjM2M0wxMi45NDcgMTNsMy4xNzktOS41NDlhMS45NzYgMS45NzYgMCAwIDEgMy43NDkgMEwyMyAxM2wxMC4wMzYuMDE1YTEuOTc1IDEuOTc1IDAgMCAxIDEuMTU5IDMuNTY2bC04LjA2MiA1LjY4MSAzLjAzNCA5Ljc5MmExLjk3IDEuOTcgMCAwIDEtLjcyIDIuMTk0IDEuOTYgMS45NiAwIDAgMS0xLjE2LjM3OSIvPjwvc3ZnPg=="></img></a>
 <a href="https://www.python.org/">
 <img alt="python" src="https://img.shields.io/badge/Python-%3E%3D3.10-blue?style=for-the-badge&color=blue&logo=Python&logoColor=blue"></img></a>
 <a href="https://github.com/Imiloin/PacGoc?tab=GPL-3.0-1-ov-file#readme">
-<img alt="license" src="https://img.shields.io/badge/LICENSE-GPL--3.0-yellow?style=for-the-badge&color=yellow&logo=googleslides&logoColor=yellow"></img></a>
+<img alt="license" src="https://img.shields.io/badge/LICENSE-GPL--3.0-yellow?style=for-the-badge&color=yellow&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+CjxwYXRoIGZpbGw9IiNkZmIzMTciCiAgICBkPSJNOC43NS43NVYyaC45ODVjLjMwNCAwIC42MDMuMDguODY3LjIzMWwxLjI5LjczNmMuMDM4LjAyMi4wOC4wMzMuMTI0LjAzM2gyLjIzNGEuNzUuNzUgMCAwIDEgMCAxLjVoLS40MjdsMi4xMTEgNC42OTJhLjc1Ljc1IDAgMCAxLS4xNTQuODM4bC0uNTMtLjUzLjUyOS41MzEtLjAwMS4wMDItLjAwMi4wMDItLjAwNi4wMDYtLjAwNi4wMDUtLjAxLjAxLS4wNDUuMDRjLS4yMS4xNzYtLjQ0MS4zMjctLjY4Ni40NUMxNC41NTYgMTAuNzggMTMuODggMTEgMTMgMTFhNC40OTggNC40OTggMCAwIDEtMi4wMjMtLjQ1NCAzLjU0NCAzLjU0NCAwIDAgMS0uNjg2LS40NWwtLjA0NS0uMDQtLjAxNi0uMDE1LS4wMDYtLjAwNi0uMDA0LS4wMDR2LS4wMDFhLjc1Ljc1IDAgMCAxLS4xNTQtLjgzOEwxMi4xNzggNC41aC0uMTYyYy0uMzA1IDAtLjYwNC0uMDc5LS44NjgtLjIzMWwtMS4yOS0uNzM2YS4yNDUuMjQ1IDAgMCAwLS4xMjQtLjAzM0g4Ljc1VjEzaDIuNWEuNzUuNzUgMCAwIDEgMCAxLjVoLTYuNWEuNzUuNzUgMCAwIDEgMC0xLjVoMi41VjMuNWgtLjk4NGEuMjQ1LjI0NSAwIDAgMC0uMTI0LjAzM2wtMS4yODkuNzM3Yy0uMjY1LjE1LS41NjQuMjMtLjg2OS4yM2gtLjE2MmwyLjExMiA0LjY5MmEuNzUuNzUgMCAwIDEtLjE1NC44MzhsLS41My0uNTMuNTI5LjUzMS0uMDAxLjAwMi0uMDAyLjAwMi0uMDA2LjAwNi0uMDE2LjAxNS0uMDQ1LjA0Yy0uMjEuMTc2LS40NDEuMzI3LS42ODYuNDVDNC41NTYgMTAuNzggMy44OCAxMSAzIDExYTQuNDk4IDQuNDk4IDAgMCAxLTIuMDIzLS40NTQgMy41NDQgMy41NDQgMCAwIDEtLjY4Ni0uNDVsLS4wNDUtLjA0LS4wMTYtLjAxNS0uMDA2LS4wMDYtLjAwNC0uMDA0di0uMDAxYS43NS43NSAwIDAgMS0uMTU0LS44MzhMMi4xNzggNC41SDEuNzVhLjc1Ljc1IDAgMCAxIDAtMS41aDIuMjM0YS4yNDkuMjQ5IDAgMCAwIC4xMjUtLjAzM2wxLjI4OC0uNzM3Yy4yNjUtLjE1LjU2NC0uMjMuODY5LS4yM2guOTg0Vi43NWEuNzUuNzUgMCAwIDEgMS41IDBabTIuOTQ1IDguNDc3Yy4yODUuMTM1LjcxOC4yNzMgMS4zMDUuMjczczEuMDItLjEzOCAxLjMwNS0uMjczTDEzIDYuMzI3Wm0tMTAgMGMuMjg1LjEzNS43MTguMjczIDEuMzA1LjI3M3MxLjAyLS4xMzggMS4zMDUtLjI3M0wzIDYuMzI3WiI+CjwvcGF0aD4KPC9zdmc+"></img></a>
 </p>
 
 <br/>
@@ -685,7 +685,7 @@ Logo 整体为字母 “N” 的形状，与紫光同创标识相呼应。整体
 ## Credits
 
 > “If I have seen further, it is by standing on the shoulders of giants.”
-> <div align="right">- Issac Newton</div>
+> <div align="right">— Issac Newton</div>
 
 本项目使用了 [pybind11](https://github.com/pybind/pybind11) 完成了 PCIe 接口在 Python 中的调用，感谢 pybind11 的作者和贡献者。
 
